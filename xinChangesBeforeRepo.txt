@@ -1,0 +1,123 @@
+comp3130Common-0: 0.3863
+	mean x,y
+	standard deviation x,y
+
+	mean red,green,blue
+	standard deviation red,green,blue
+	covariance of red,green,blue
+
+	mean of average of RGB
+	standard deviation of average of RGB
+
+	number of pixel
+
+comp3130Common-1: 0.383201
+(remove mean and covariance of average RGB and standard deviation of RGB and #pixel)
+	mean x,y
+	standard deviation x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+
+comp3130Common-2: 0.383191
+(add number of pixel)
+	mean x,y
+	standard deviation x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	number of pixel
+
+comp3130Common-3: 0.383191
+(add ratio of length of x to length of y)
+	mean x,y
+	standard deviation x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+
+	number of pixel
+	ratio of dx to dy
+
+comp3130Common-4: 0.382637
+(reduce standard deviation of x,y)
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	number of pixel
+	ratio of dx to dy
+
+comp3130Common-5: 0.382573
+(remove #pixel and ratio of dx to dy)
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+
+comp3130Common-6: 0.384886
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	difference with neighbour
+
+comp3130Common-7:0.384886
+(add average gray degree of filtered image) 	
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	difference with neighbour
+	average gray degree of filtered image
+
+comp3130Common-8: 0.384891
+(add average gray degree of filtered image with multiple threshold) 	
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	difference with neighbour
+	average gray degree of filtered image
+
+comp3130Common-9: 0.389695
+(add average gray degree of filtered image with multiple threshold and normX, normY) 	
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	difference with neighbour
+	average gray degree of filtered image (14 different threshold)
+
+comp3130Common-10: 0.389717 still no tremendous progress
+(more threshold for filtering)
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	difference with neighbour
+	average gray degree of filtered image (20 different threshold)
+
+comp3130Common-11: 0.389679
+(correct an error for feature[5] - the average diff of pixel to its neighhours)
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	difference with neighbour
+	average gray degree of filtered image (14 threshold)
+
+comp3130Common-12: 0.426963 largely up
+(add marginal RGB diff of one pixel to its neighbour)
+	mean x,y
+	mean red,green,blue
+	standard deviation red,green,blue
+	difference with neighbour
+	average gray degree of filtered image (14 threshold)
+
+comp3130Common-13: 0.424722 down
+(add x-2,x+2,y+2,y-2 as neibours)
+
+comp3130Common-14: 0.42151 down
+(remove x-2,x+2,y+2,y-2, add (x+1,y+1),(x-1,y+1),(x+1,y-1),(x-1,y-1) as neighbours)
+
+comp3130Common-15: 0.426055
+(remove new-added neighbours, add two-joint diff)
+
+comp3130Common-17: 0.428604
+(remove two-joint diff and add non-absolute three-joint diff to neighbour)
+
+comp3130Common-18: 0.428299
+(add three marginal diff to its neighbours (non-absolute))
+
+comp3130Common-19: 0.426015
+(add condition for judgement of neighbour: must belong to the same segment)
