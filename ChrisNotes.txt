@@ -1,0 +1,37 @@
+COMP2550 log notes
+
+How do humans differentiate objects?
+Colour - mean r, g, b, their standard deviation (to what?)
+Contrast ("grayscale"?) and texture
+Outline
+Shadows (too difficult to implement)
+area in vision (high/low placement)
+average length/height/"depth"
+Shape - round/square/oblong etc?
+
+Due MAR 22 cf notes.
+FINAL VERSION DUE 20TH.
+FIRST VERSIONS DUE 15TH.
+
+
+TODO:
+latex/word template for report TODO.
+contrast (difference between pixels in superpixel) - average grayscale (combined RGB)
+avg. length x and y
+report scientific structure
+area (high/low blue - sky/water)
+average R/G/B and their standard deviation (marginal?)
+Chris - check psych notes
+
+THOUGHTS:
+The code as it stands outputs images which show labels are grossly inaccurate.  Birds are painted as road/building because they are grey (outline/shape problem), hair is labelled as grass because of its colour etc.  Need to think about how we're going to change this.  Animals are still labelled as grass occasionally - why?
+
+Zero columns in confusion matrix - single out why these are caused and see if we can do something about it!
+
+Perimeter length is too ambiguous to delineate different superpixel types (you can have small and large of all kinds)
+Standard deviation isn't very robust - is it better to measure the variance in colours? Would this allow for a better profiling ability than the standard deviation?
+
+Need to look into complementary features (not ones that fight against each other)?
+lean towards accuracy rather than efficiency.
+
+reference n. 22 is stateOfTheArt on dataset, maybe 8 hours to train the classifiers, a few minutes per image to label.
