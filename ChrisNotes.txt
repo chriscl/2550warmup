@@ -26,6 +26,8 @@ Chris - check psych notes
 THOUGHTS:
 The code as it stands outputs images which show labels are grossly inaccurate.  Birds are painted as road/building because they are grey (outline/shape problem), hair is labelled as grass because of its colour etc.  Need to think about how we're going to change this.  Animals are still labelled as grass occasionally - why?
 
+I think I've worked out why - based on only pixel appearance at the moment (location not implemented yet?), if we can get some global features worked in (cars appear on roads, ducks on water, cows around grass etc) then accuracy should improve greatly.
+
 Zero columns in confusion matrix - single out why these are caused and see if we can do something about it!
 
 Perimeter length is too ambiguous to delineate different superpixel types (you can have small and large of all kinds)
