@@ -7,43 +7,39 @@
 ******************************************************************************
 ** FILENAME:    comp3130Common.h
 ** AUTHOR(S):   Stephen Gould <stephen.gould@anu.edu.au>
-**
+**              Jimmy Lin <u5223173@uds.anu.edu.anu>
+**              Chris
 *****************************************************************************/
 #include <cmath>
+#include <list>
 using namespace std;
 using namespace Eigen;
 
-// getSuperpixelFeatures -----------------------------------------------------
-// This function extracts a feature vector for the superpixel with given id.
-
-vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int id)
-{
-    // TODO: Define the number of features.
-    //const unsigned numFeatures = 1;
-    //vector<double> features(numFeatures, 0.0);
-
-    const unsigned numFeatures = 41;
-    vector<double> features(numFeatures, 0.0);
-
-
-    // TODO: Compute some features that you think will be useful. See the
-    // getSuperpixelLabel function for an example of iterating over all
-    // pixels within a superpixel.
-    features.resize(numFeatures ,0);
-    int START,END;
-    int numOfpixel = 0;
-    Vec3b intensity;
-    unsigned char blue;
-    unsigned char green;
-    unsigned char red;
-    double bluetemp=0.0,greentemp=0.0,redtemp=0.0;
-    double diffToNeighbour_RED,diffToNeighbour_BLUE,diffToNeighbour_GREEN,diffToNeighbour;
-    double diffToNeighbour_abs;
-    int counter = 0;
-    int maxX = 0 ,minX = seg.cols;
-    int maxY = 0, minY = seg.rows;
-
-    /* Mean value of R G B */
+vector<double> getRGBLightness(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{ // 6 attributes
+/*{{{*/
+     int numOfpixel = 0;
+     unsigned char blue, green, red;
+     Vec3b intensity;
+     for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            intensity = img.at<Vec3b>(y,x);
+            blue = intensity.val[0];
+            green = intensity.val[1];
+            red = intensity.val[2];
+            features[index] += (int) red;
+            features[index+1] += (int) green;
+            features[index+2] += (int) blue;
+            numOfpixel ++;
+        }
+     }
+     for (int i = index; i < index + 3; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+    numOfpixel = 0;
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
@@ -53,16 +49,231 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
             blue = intensity.val[0];
             green = intensity.val[1];
             red = intensity.val[2];
-            features[0] += (int) red;
-            features[1] += (int) green;
-            features[2] += (int) blue;
-            features[3] += y;
-            features[4] += x;
-            
-            counter = 0;
-            bluetemp = 0;
-            redtemp = 0;
-            greentemp = 0;
+            features[index+3] += abs(((int) red) - features[0]) * abs(((int) red) - features[0]);
+            features[index+4] += abs(((int) green) - features[1]) * abs(((int) green) - features[1]);
+            features[index+5] += abs(((int) blue) - features[2]) * abs(((int) blue) - features[2]);
+            numOfpixel ++;
+        }
+    }
+     for (int i = index + 3; i < index + 6; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+/*}}}*/
+     return features; 
+}
+
+vector<double> getRGBDiff(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{ // 6 attributes
+/*{{{*/
+     int numOfpixel = 0;
+     unsigned char blue, green, red;
+     Vec3b intensity;
+     for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            intensity = img.at<Vec3b>(y,x);
+            blue = intensity.val[0];
+            green = intensity.val[1];
+            red = intensity.val[2];
+            features[index] += abs((int) (red - green));
+            features[index+1] += abs((int) (green - blue));
+            features[index+2] += abs((int) (blue - red));
+            features[index+3] += ((int) (red - green));
+            features[index+4] += ((int) (green - blue));
+            features[index+5] += ((int) (blue - red));
+            numOfpixel ++;
+        }
+     }
+     for (int i = index; i < index + 6; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+/*}}}*/
+     return features; 
+}
+
+vector<double> getRGBDiffPlus(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{ // 6 attributes
+/*{{{*/
+     int numOfpixel = 0;
+     unsigned char blue, green, red;
+     Vec3b intensity;
+     for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            intensity = img.at<Vec3b>(y,x);
+            blue = intensity.val[0];
+            green = intensity.val[1];
+            red = intensity.val[2];
+            features[index] += abs((int) (red - (green + blue) / 2 ));
+            features[index+1] += abs((int) (green - (blue + red) / 2));
+            features[index+2] += abs((int) (blue - (red + green)/2));
+            features[index+3] += ((int) (red - (green + blue) / 2 ));
+            features[index+4] += ((int) (green - (blue + red) / 2));
+            features[index+5] += ((int) (blue - (red + green)/2));
+            numOfpixel ++;
+        }
+     }
+     for (int i = index; i < index + 6; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+/*}}}*/
+     return features; 
+}
+
+vector<double> getNumOfPixel(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{ // 6 attributes
+/*{{{*/
+     int numOfpixel = 0;
+     for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            numOfpixel ++;
+        }
+     }
+     features[index] = numOfpixel;
+
+/*}}}*/
+     return features; 
+}
+
+vector<double> getLocations (vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{
+    /*{{{*/
+     int numOfpixel = 0;
+    for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            features[index] += y;
+            features[index+1] += x;
+                        
+            numOfpixel ++;
+        }
+     }
+    for (int i = index; i < index + 2; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+     numOfpixel = 0;
+    for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            features[index+2] += (y - features[index]) * (y - features[index]) ;
+            features[index+3] += (x - features[index+1]) * (x - features[index+1]);
+                        
+            numOfpixel ++;
+        }
+     }
+    for (int i = index + 2; i < index + 4; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+    return features;
+/*}}}*/
+}
+
+vector<double> getMarginalDistribution(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{
+/*{{{*/
+    int numOfpixel;
+    unsigned char blue, green, red;
+    Vec3b intensity;
+    numOfpixel = 0;
+    int step = 9;
+    int spaceClass = 255 / step + 1;
+    int cblue,cgreen,cred;
+    for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            intensity = img.at<Vec3b>(y,x);
+            blue = intensity.val[0];
+            green = intensity.val[1];
+            red = intensity.val[2];
+            cblue = ((int)blue) / step;
+            cgreen = ((int)green) / step;
+            cred = ((int)red) / step;
+            //cout << "\n(" << (int)blue << "->" << cblue << ", " << (int)green << "->" << cgreen << ", " << (int)red << "->" << cred << ")\n";
+            /* Category assignment */
+            features[index+cred] += 1.0 ;
+            features[index+spaceClass+cgreen] += 1.0 ;
+            features[index+2*spaceClass+cblue] += 1.0 ;
+            numOfpixel += 1;
+        }
+    }
+    for (int i = index ; i < index + 3 * spaceClass; i ++){
+        features[i] /= 1.0 * numOfpixel;
+    }
+/*}}}*/
+    return features;
+}
+
+vector<double> getMarginalDistributionWithLocation(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{
+/*{{{*/
+    int numOfpixel;
+    unsigned char blue, green, red;
+    Vec3b intensity;
+    numOfpixel = 0;
+    int step = 9;
+    int spaceClass = 255 / step + 1;
+    int cblue,cgreen,cred;
+
+    vector<double> temp(4,0.0);
+    temp = getLocations( temp, 0, img, seg, id);
+
+    for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
+            intensity = img.at<Vec3b>(y,x);
+            blue = intensity.val[0];
+            green = intensity.val[1];
+            red = intensity.val[2];
+            cblue = ((int)blue) / step;
+            cgreen = ((int)green) / step;
+            cred = ((int)red) / step;
+            //cout << "\n(" << (int)blue << "->" << cblue << ", " << (int)green << "->" << cgreen << ", " << (int)red << "->" << cred << ")\n";
+            /* Category assignment */
+            features[index+cred] += 1.0 * ( (x-temp[1])*(x-temp[1])  + (y-temp[0])* (y-temp[0])  ) ;
+            features[index+spaceClass+cgreen] += 1.0 * ( (x-temp[1])*(x-temp[1])  + (y-temp[0])* (y-temp[0])  ) ;
+            features[index+2*spaceClass+cblue] += 1.0 *  ( (x-temp[1])*(x-temp[1])  + (y-temp[0])* (y-temp[0])  );
+            numOfpixel += 1;
+        }
+    }
+    for (int i = index ; i < index + 3 * spaceClass; i ++){
+        features[i] /= 1.0 * numOfpixel;
+    }
+/*}}}*/
+    return features;
+}
+
+vector<double> getSmoothness(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{
+/*{{{*/
+    int numOfpixel = 0;
+    Vec3b intensity;
+    unsigned char blue;
+    unsigned char green;
+    unsigned char red;
+    double bluetemp=0.0,greentemp=0.0,redtemp=0.0;
+    double diffToNeighbour_RED,diffToNeighbour_BLUE,diffToNeighbour_GREEN;
+    double diffToNeighbour_abs,diffToNeighbour;
+    int counter = 0;
+    for (int y = 0; y < seg.rows; y++){
+        for (int x = 0; x < seg.cols; x++){
+            if (seg.at<int>(y,x) != id){
+                continue;
+            }
 
             if ( y > 0 ){
                 intensity = img.at<Vec3b>(y-1,x);
@@ -102,97 +313,365 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
             diffToNeighbour_BLUE = abs(bluetemp - (int)blue);
             diffToNeighbour = (bluetemp + redtemp + greentemp) / 3.0 - ((int) (red + green + blue)) / 3.0;
             diffToNeighbour_abs = abs((bluetemp + redtemp + greentemp) / 3.0 - ((int) (red + green + blue)) / 3.0);
-            features[5] += diffToNeighbour;
-            features[6] += diffToNeighbour_abs;
-            features[7] += diffToNeighbour_RED;
-            features[8] += diffToNeighbour_GREEN;
-            features[9] += diffToNeighbour_BLUE;
-            //cout <<"("<<id << "; "<< x << "," << y << "; "<< (int)red << "," << (int) green <<"," << (int) blue << "; ";
-            //cout << diffToNeighbour << ","<< diffToNeighbour_RED << "," << diffToNeighbour_GREEN << "," << diffToNeighbour_BLUE <<")\n";
-
-            if (x > maxX) maxX = x;
-            if (x < minX) minX = x;
-            if (y > maxY) maxY = y;
-            if (y < minY) minY = y;
-         
-            numOfpixel += 1;
+            features[index] += diffToNeighbour;
+            features[index+1] += diffToNeighbour_abs;
+            features[index+2] += diffToNeighbour_RED;
+            features[index+3] += diffToNeighbour_GREEN;
+            features[index+4] += diffToNeighbour_BLUE;
         }
     }
-    for ( int i = 0; i < 10; i++){
+    for ( int i = index; i < index + 5; i++){
         features[i] /= (1.0 * numOfpixel);
     }
+    
+    /*}}}*/
+    return features;
+}
 
-    /* Count for variance and standard deviation of R G B */
-    START = 10;
-    END = 12;
-    numOfpixel = 0; 
+list<int> detectNeighbours(int y, int x, list<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id)
+{
+/*{{{*/
+    if (x > 0 && x < seg.cols && y > 0 && y < seg.rows) {
+        ;
+    } else {
+        return neighbours;
+    }
+
+    int id = seg.at<int>(y,x);
+    if (id != expected_id) {
+        /* a distinct superpixel */
+        for (list<int>::iterator itor = neighbours.begin(); itor != neighbours.end(); ++itor){
+            if (id == *itor) {
+                // neigbhours pre-existing in list
+                return neighbours; 
+            }
+            else continue;
+        }
+        // superpixel not pre-existing in list, so add it to list
+        neighbours.push_back (id);
+        return neighbours;
+    }
+    else return neighbours;
+/*}}}*/
+}
+
+list<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) 
+{
+/*{{{*/
+    list<int> neighbours;
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
                 continue;
-            }
-            intensity += img.at<Vec3b>(y,x);
-            blue = intensity.val[0];
-            green = intensity.val[1];
-            red = intensity.val[2];        
-            /* Marginal Standard deviation */
-            features[START] += abs(((int) red) - features[0]);
-            features[START+1] += abs(((int) green) - features[1]);
-            features[START+2] += abs(((int) blue) - features[2]);
-            
-            numOfpixel += 1;
+            } 
+            neighbours = detectNeighbours( y-1, x-1, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y-1, x, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y-1, x+1, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y, x-1, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y, x, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y, x+1, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y+1, x-1, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y+1, x, neighbours, img, seg, id);
+            neighbours = detectNeighbours( y+1, x+1, neighbours, img, seg, id);
         }
     }
-    for ( int i = START; i < END + 1; i++){
-        features[i] /= (1.0 * numOfpixel); //work out average
+    if (0) {
+        cout << "(" << id << ":"<< neighbours.size() <<":";
+        for (list<int>::iterator itor = neighbours.begin(); itor != neighbours.end(); ++itor){
+            cout << *itor << ",";
+        }
+        cout  << ")\n";
+    }
+/*}}}*/
+    return neighbours;
+}
+
+double getSimilarity(vector<double> vec1, vector<double> vec2, int index1, int index2, int len){
+    double sim = 0.0;
+    for (int i = 0 ; i < len; i ++){
+        sim += vec1[i+index1] * vec2[i+index2];
     }
 
-    /* Now process with black-white image
-     *  TODO: raw black-white image, filtered black-white image
-     * */
-    START = 13;
-    END = 40;
-    double threshold = 0.1;
-    double gray;
-    double space = 0.05;
-    int repetition = 14,time;
-    double normX,normY;
+    return sim;
+}
+
+int findSimilarNeighbour(list<int> neighbours, list<double> simList, bool maximum)
+{
+/*{{{*/
+    int index = 0;
+    int optimum;
+    int i;
+    if (maximum) optimum = -1; // find maximum
+    else optimum = 100; // find minimum
+
+    i = 0;
+    for ( list<double>::iterator itor = simList.begin() ; itor != simList.end(); ++ itor, i++) {
+        if (maximum && *itor > optimum) {
+            optimum = *itor;
+            index = i;
+        } else if (!maximum && *itor < optimum) {
+            optimum = *itor;
+            index = i;
+        }
+        else continue;
+    }
+    
+    i = 0;
+    for (list<int>::iterator itor = neighbours.begin() ; itor != neighbours.end(); ++ itor, i++) {
+        if (i == index) return *itor;
+        else continue;
+    }
+/*}}}*/
+}
+
+// feature selection based on neighbours --------------------------------
+vector<double> NeighbourScheme1 (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{ // 24 attributes
+/*{{{*/
+    list<int> neighbours;
+    list<double> similarity;
+    vector<double> temp( 87, 0.0);
+    int leastsim_neighbour_id , mostsim_neighbour_id;
+
+    neighbours = getNeighbours( img, seg, id);
+    for (list<int>::iterator itor = neighbours.begin() ; itor != neighbours.end(); ++ itor) {
+        temp = getMarginalDistribution( temp, 0, img, seg, *itor);
+        similarity.push_back(getSimilarity(features, temp, 0, 0, temp.size()));
+    }
+    mostsim_neighbour_id = findSimilarNeighbour(neighbours, similarity, true);
+    leastsim_neighbour_id = findSimilarNeighbour(neighbours, similarity, false);
+    // cout << id << ":"<<mostsim_neighbour_id << ":" << leastsim_neighbour_id << "\n";
+ 
+    features = getRGBLightness( features, index, img, seg, mostsim_neighbour_id);
+    features = getRGBDiff( features, index + 6, img, seg, mostsim_neighbour_id);
+    features = getRGBLightness( features, index + 12, img, seg, leastsim_neighbour_id);
+    features = getRGBDiff( features, index + 18, img, seg, leastsim_neighbour_id);
+    //features = getMarginalDistribution( features, index , img, seg, leastsim_neighbour_id);
+/*}}}*/
+    return features;
+}
+
+bool isInList (int id, list<int> L)
+{
+    for (list<int>::iterator itor = L.begin() ; itor != L.end(); ++itor) {
+        if (id == *itor) return true;
+        else continue;
+    }
+    return false;
+}
+vector<double> getNeighboursMarginalDistribution(vector<double> features, list<int> neighbours, int index, const cv::Mat& img, const cv::Mat& seg)
+{
+/*{{{*/
+    int numOfpixel;
+    unsigned char blue, green, red;
+    Vec3b intensity;
     numOfpixel = 0;
+    int step = 9;
+    int spaceClass = 255 / step + 1;
+    int cblue,cgreen,cred;
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
-            if (seg.at<int>(y,x) != id){
+            if (!isInList(seg.at<int>(y,x) , neighbours)){
                 continue;
             }
-            intensity += img.at<Vec3b>(y,x);
+            intensity = img.at<Vec3b>(y,x);
             blue = intensity.val[0];
             green = intensity.val[1];
             red = intensity.val[2];
-            gray = (blue + green + red) / 3.0;
-            normX = (x-minX) ;
-            normY = (y-minY) ;
-            for (time = 0 ; time < repetition; time++){
-                if (gray >= threshold + space*time) {
-                    features[START+time] += 1*normX;
-                    features[START+repetition+time] += 1*normY;
-                } else {
-                    features[START+time] += 0;
-                    features[START+repetition+time] += 0;
-                }
-            }
+            cblue = ((int)blue) / step;
+            cgreen = ((int)green) / step;
+            cred = ((int)red) / step;
+            //cout << "\n(" << (int)blue << "->" << cblue << ", " << (int)green << "->" << cgreen << ", " << (int)red << "->" << cred << ")\n";
+            /* Category assignment */
+            features[index+cred] += 1.0 ;
+            features[index+spaceClass+cgreen] += 1.0 ;
+            features[index+2*spaceClass+cblue] += 1.0 ;
             numOfpixel += 1;
         }
     }
-    
-    for (int i = START ; i < START + 2*repetition ; i ++){
-        features[i] /= numOfpixel;
+    for (int i = index ; i < index + 3 * spaceClass; i ++){
+        features[i] /= 1.0 * numOfpixel;
+    }
+/*}}}*/
+    return features;
+}
+
+
+vector<double> NeighbourScheme2 (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{
+    list<int> neighbours;
+    neighbours = getNeighbours( img, seg, id);
+    features = getNeighboursMarginalDistribution (features,neighbours, index, img, seg);
+
+    return features;
+}
+
+vector<double> NeighbourScheme3 (vector<double> features, int index,int meanY, int meanX, const cv::Mat& img, const cv::Mat& seg, int id) 
+{
+/*{{{*/
+     /* Parameters. */
+    int sideLength = 70; // unit:pixels
+
+    // -----------------------------------
+     int numOfpixel = 0;
+     unsigned char blue, green, red;
+     Vec3b intensity;
+     
+     int left, right, bottom, top;
+    if ( meanX - sideLength < 0) left = 0;
+    if ( meanX + sideLength > seg.cols - 1) right = seg.cols - 1;
+    if ( meanY - sideLength < 0) bottom = 0;
+    if ( meanY + sideLength > seg.rows - 1) top = seg.rows - 1;
+
+     for (int y = bottom; y < top; y++){
+        for (int x = left; x < right; x++){
+            /* Here we ignore the pixel in the same super pixel */
+            if (seg.at<int>(y,x) == id){
+                continue;
+            }
+            intensity = img.at<Vec3b>(y,x);
+            blue = intensity.val[0];
+            green = intensity.val[1];
+            red = intensity.val[2];
+            features[index] += (int) red;
+            features[index+1] += (int) green;
+            features[index+2] += (int) blue;
+            features[index+3] += abs((int) (red - green));
+            features[index+4] += abs((int) (green - blue));
+            features[index+5] += abs((int) (blue - red));
+            features[index+6] += ((int) (red - green));
+            features[index+7] += ((int) (green - blue));
+            features[index+8] += ((int) (blue - red));
+            numOfpixel ++;
+        }
+     }
+     for (int i = index; i < index + 9; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+     numOfpixel = 0;
+     for (int y = bottom; y < top; y++){
+        for (int x = left; x < right; x++){
+            /* Here we ignore the pixel in the same super pixel */
+            if (seg.at<int>(y,x) == id){
+                continue;
+            }
+            intensity = img.at<Vec3b>(y,x);
+            blue = intensity.val[0];
+            green = intensity.val[1];
+            red = intensity.val[2];
+            features[index+9] += abs(((int) red) - features[0]) * abs(((int) red) - features[0]);
+            features[index+10] += abs(((int) green) - features[1]) * abs(((int) green) - features[1]);
+            features[index+11] += abs(((int) blue) - features[2]) * abs(((int) blue) - features[2]);
+            numOfpixel ++;
+        }
+    }
+     for (int i = index + 9; i < index + 12; i ++) {
+        features[i] /= 1.0 * numOfpixel;
+     }
+    /*}}}*/
+    return features;
+}
+// getSuperpixelFeatures -----------------------------------------------------
+// This function extracts a feature vector for the superpixel with given id.
+vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int id)
+{
+
+    // TODO: Define the number of features.
+     const unsigned numFeatures = 63;
+
+    vector<double> features(numFeatures, 0.0);
+
+
+    // TODO: Compute some features that you think will be useful. See the
+    // getSuperpixelLabel function for an example of iterating over all
+    // pixels within a superpixel.
+    //features.resize(numFeatures ,0);
+
+    if (false){ // feature: 16+87  A: 0.433891
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getMarginalDistribution( features, 6, img, seg, id);
+        features = getLocations( features, 6 + 87, img, seg, id); 
+        features = getSmoothness(features, 6 + 87 + 4, img, seg, id);
     }
 
+    if (false){ // #feature: 14  A: 0.346711
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getLocations( features, 6 , img, seg, id);
+        features = getSmoothness(features, 6 + 4, img, seg, id);
+    }
+    
+    if (false){ // #feature: 17  A: 0.460461
+        /* RGB's difference to each other substantially increases the accuracy of decision tree */
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBDiff( features, 6, img, seg, id); // here has three attributes with abs only
+        features = getLocations( features, 6 + 3 , img, seg, id);
+        features = getSmoothness( features, 6 + 3 + 4, img, seg, id);
+    }
+
+    if (false){ // #feature: 21  A: 0.512019
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBDiff( features, 6, img, seg, id); // here has six attributes with abs and original values
+        features = getLocations( features, 6 + 6 , img, seg, id);
+        features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
+    }
+
+    if (false){ // #feature: 22   A: 0.511862
+        /* number of pixel weakens the outcome of classifier */
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBDiff( features, 6, img, seg, id); 
+        features = getLocations( features, 6 + 6 , img, seg, id);
+        features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
+        features = getNumOfPixel( features, 6 + 6 + 4 + 5, img, seg, id);
+    }
+
+    if (false){ // #feature: 27  A: 0.51378
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBDiff( features, 6, img, seg, id); // here has six attributes with abs and original values
+        features = getLocations( features, 6 + 6 , img, seg, id);
+        features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
+        features = getRGBDiffPlus( features, 21, img, seg, id);
+    }
+
+    if (false){ // #feature: 33  A: 0.517115
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBDiff( features, 6, img, seg, id); 
+        features = getLocations( features, 6 + 6 , img, seg, id);
+        features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
+        features = NeighbourScheme3( features, 6 + 6 + 4 + 5, features[12],features[13], img, seg, id);
+    }
+
+    if (false){ // #feature: 45  A: 0.519499
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBDiff( features, 6, img, seg, id); 
+        features = getLocations( features, 6 + 6 , img, seg, id);
+        features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
+        features = NeighbourScheme1( features, 6 + 6 + 4 + 5, img, seg, id);
+    }
+
+    if (false){ // #feature: 63  A: 0.511859
+        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBDiff( features, 6, img, seg, id); 
+        features = getLocations( features, 6 + 6 , img, seg, id);
+        features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
+         features = getRGBDiffPlus( features, 21, img, seg, id);
+        features = NeighbourScheme1( features, 27 , img, seg, id);
+        features = NeighbourScheme3( features, 27 + 24, features[12],features[13], img, seg, id);
+    }
+
+    /* Output to screen */
+    if (0){
+        cout << "(";
+        for (int i = 0; i < numFeatures ; i ++){
+            cout << features[i] << "," ;
+        }
+        cout << ")\n";
+    }
     return features;
 }
 
 // getSuperpixelLabel --------------------------------------------------------
 // This function returns the most frequently occurring pixel label within
-// a superpixel. Negative labels are ignored.
+// a superpixel. Negative labels are ignored. ...
 
 int getSuperpixelLabel(const MatrixXi& labels, const cv::Mat& seg, int id)
 {
