@@ -1,0 +1,78 @@
+% -----
+% STANDARD TeX TEMPLATE
+% CHRISTOPHER CLAOUE-LONG
+% -----
+% -
+% - DOCUMENT GEOMETRY SETUP
+\documentclass[12pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=20mm}
+\usepackage{lastpage}
+\makeatletter \renewcommand{\@oddfoot}{\hfil Page \thepage\ of \pageref{LastPage} \hfil} \makeatother
+% -
+% - SECTION FORMATTING
+\renewcommand \thepart{\Roman{part}}
+\renewcommand \thesection{\arabic{section}}
+\renewcommand \thesubsection{\arabic{section}.\arabic{subsection}}
+\renewcommand \thesubsubsection{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+% -
+% - FONT
+\usepackage{amsmath, amsthm, amssymb,graphicx,epstopdf}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\usepackage[sc]{mathpazo}
+\linespread{1.05}
+\usepackage[T1]{fontenc}
+\usepackage[bitstream-charter]{mathdesign}
+% -
+% - MISC. PACKAGES
+\usepackage{color}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}\usepackage{tikz} \usepackage{qtree, tikz-qtree, lineno}
+\renewcommand\linenumberfont{\normalfont\sffamily}
+\usepackage{datetime, multicol, verbatim, ulem, alltt, multirow, hyperref}
+\hypersetup{
+colorlinks,
+citecolor=black,		% - Citation colour
+filecolor=black,		% - File colour
+linkcolor=black,		% - Link colour
+urlcolor=black		% - URL colour
+}
+\urlstyle{same}
+% -
+% -
+% - MISC. SYMBOLS AND COMMANDS
+% - Thick horizontal blue line
+\newcommand{\Hrule}{\textcolor{blue}{\rule{\linewidth}{0.5mm}}}
+% -----
+\begin{document}
+% -----
+% - Title
+\begin{center}
+\Hrule\\
+\textbf{\Huge COMP2550/COMP3130\\Warmup Project Report}\\
+\textbf{\large Christopher Claou\'e-Long and Jimmy Lin}\\
+\Hrule
+\end{center}
+% -
+% -
+\begin{multicols}{2}
+\section{Overview}
+The task at hand for this warmup project was to implement a set of useful features for a computer vision task, using the open source Darwin framework for machine learning and the MSRC dataset.  The desired outcome was a feature vector that allowed the machine learning algorithms to classify images with over 50\% accuracy.
+
+\section{Method}
+Intuition, thoughts and discussion on the CV features\\
+RGB values and std deviation, centre (position), average grayscale, difference between colours in a superpixel, neighbours, etc.
+
+\section{Results}
+Accuracy tables with different features implemented.
+
+\section{Discussion}
+Interpretation of results, what went well, what wend wrong (overfitting?), what could be done better.
+
+\section{References?}
+Do we have any?
+\end{multicols}
+\vfill\Hrule
+\end{document}
+% -----
+% END OF LINE
+% -----
