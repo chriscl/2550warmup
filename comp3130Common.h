@@ -21,7 +21,7 @@ using namespace Eigen;
  * well as their standard deviation, adding them to the features vector starting
  * at the index value. 
  * REQUIRES 6 VECTOR VALUES */
-void getRGBLuminance(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
+vector<double> getRGBLuminance(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
      unsigned char blue, green, red;
      Vec3b intensity;
      for (int y = 0; y < seg.rows; y++){
@@ -52,22 +52,23 @@ void getRGBLuminance(vector<double> features, int index, int pixels, const cv::M
             blue = intensity.val[0];
             green = intensity.val[1];
             red = intensity.val[2];
-            features[index+3] += ((int) red) - features[index]) * ((int) red) - features[index]);
-            features[index+4] += ((int) green) - features[index+1]) * ((int) green) - features[index+1]);
-            features[index+5] += ((int) blue) - features[index+2]) * ((int) blue) - features[index+2]);
+            features[index+3] += ((((int) red) - features[index]) * (((int) red) - features[index]));
+            features[index+4] += ((((int) green) - features[index+1]) * (((int) green) - features[index+1]));
+            features[index+5] += ((((int) blue) - features[index+2]) * (((int) blue) - features[index+2]));
         }
     }
     // Convert to standard deviation
      for (int i = index + 3; i < index + 6; i ++) {
         features[i] = sqrt(features[i]/ (1.0 * pixels));
      }
+     return features;
 }
 
 /* Calculates the average difference and average absolute difference between the
  * red, green and blue values in the superpixel, adding them to the features
  * vector starting at the index value.
  * REQUIRES 6 VECTOR VALUES */
-void getRGBDiff(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
+vector<double> getRGBDiff(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
      unsigned char blue, green, red;
      Vec3b intensity;
      for (int y = 0; y < seg.rows; y++){
@@ -90,6 +91,7 @@ void getRGBDiff(vector<double> features, int index, int pixels, const cv::Mat& i
      for (int i = index; i < index + 6; i ++) {
         features[i] /= (1.0 * pixels);
      }
+     return features;
 }
 
 /*void getRGBDiffPlus(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id){ // 6 attributes
@@ -139,7 +141,7 @@ int getPixelCount(const cv::Mat& seg, int id){ // 6 attributes
  * the standard deviation of the pixels, adding them to the features vector 
  * starting at the index value.
  * REQUIRES 4 VECTOR VALUES */
-void getLocations (vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
+vector<double> getLocations (vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
@@ -167,9 +169,10 @@ void getLocations (vector<double> features, int index, int pixels, const cv::Mat
     for (int i = index + 2; i < index + 4; i ++) {
         features[i] = sqrt(features[i]/ (1.0 * pixels));
 	}
+	return features;
 }
 
-/*void getMarginalDistribution(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id){
+vector<double> getMarginalDistribution(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id){
     int numOfpixel;
     unsigned char blue, green, red;
     Vec3b intensity;
@@ -200,7 +203,8 @@ void getLocations (vector<double> features, int index, int pixels, const cv::Mat
     for (int i = index ; i < index + 3 * spaceClass; i ++){
         features[i] /= 1.0 * numOfpixel;
     }
-}*/
+    return features;
+}
 
 /*vector<double> getMarginalDistributionWithLocation(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id){
     int numOfpixel;
@@ -241,7 +245,7 @@ void getLocations (vector<double> features, int index, int pixels, const cv::Mat
 
 /* Calculate the diff
  */
-void getSmoothness(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
+vector<double> getSmoothness(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
     Vec3b intensity;
     unsigned char blue;
     unsigned char green;
@@ -304,6 +308,7 @@ void getSmoothness(vector<double> features, int index, int pixels, const cv::Mat
     for ( int i = index; i < index + 5; i++){
         features[i] /= (1.0 * pixels);
     }
+    return features;
 }
 
 list<int> detectNeighbours(int y, int x, list<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id){
@@ -400,8 +405,7 @@ int findSimilarNeighbour(list<int> neighbours, list<double> simList, bool maximu
 }
 
 // feature selection based on neighbours --------------------------------
-void NeighbourScheme1 (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id){ // 24 attributes
-/*{{{*/
+vector<double> NeighbourScheme1 (vector<double> features,int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){ // 24 attributes
     list<int> neighbours;
     list<double> similarity;
     vector<double> temp( 87, 0.0);
@@ -416,12 +420,11 @@ void NeighbourScheme1 (vector<double> features,int index, const cv::Mat& img, co
     leastsim_neighbour_id = findSimilarNeighbour(neighbours, similarity, false);
     // cout << id << ":"<<mostsim_neighbour_id << ":" << leastsim_neighbour_id << "\n";
  
-    features = getRGBLightness( features, index, img, seg, mostsim_neighbour_id);
-    features = getRGBDiff( features, index + 6, img, seg, mostsim_neighbour_id);
-    features = getRGBLightness( features, index + 12, img, seg, leastsim_neighbour_id);
-    features = getRGBDiff( features, index + 18, img, seg, leastsim_neighbour_id);
+    getRGBLuminance( features, index, pixels, img, seg, mostsim_neighbour_id);
+    getRGBDiff( features, index + 6, pixels, img, seg, mostsim_neighbour_id);
+    getRGBLuminance( features, index + 12, pixels, img, seg, leastsim_neighbour_id);
+    getRGBDiff( features, index + 18, pixels, img, seg, leastsim_neighbour_id);
     //features = getMarginalDistribution( features, index , img, seg, leastsim_neighbour_id);
-/*}}}*/
     return features;
 }
 
@@ -543,11 +546,11 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     // Length of the feature vector and vector initialised to 0.0 for all values
     const unsigned numFeatures = 63;
 	vector<double> features(numFeatures, 0.0);
-	int pixelCount = getPixelCount(seg, id);
+	int pixelcount = getPixelCount(seg, id);
 
 	/*/ feature: 16+87  A: 0.433891
     if (false){ 
-        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBLuminance( features, 0, img, seg, id);
         features = getMarginalDistribution( features, 6, img, seg, id);
         features = getLocations( features, 6 + 87, img, seg, id); 
         features = getSmoothness(features, 6 + 87 + 4, img, seg, id);
@@ -555,7 +558,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
 
 	// #feature: 14  A: 0.346711
     if (false){ 
-        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBLuminance( features, 0, img, seg, id);
         features = getLocations( features, 6 , img, seg, id);
         features = getSmoothness(features, 6 + 4, img, seg, id);
     }
@@ -563,7 +566,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     // #feature: 17  A: 0.460461
     if (false){
         // RGB's difference to each other substantially increases the accuracy of decision tree
-        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBLuminance( features, 0, img, seg, id);
         features = getRGBDiff( features, 6, img, seg, id); // here has three attributes with abs only
         features = getLocations( features, 6 + 3 , img, seg, id);
         features = getSmoothness( features, 6 + 3 + 4, img, seg, id);
@@ -571,7 +574,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
 
     // #feature: 21  A: 0.512019
     if (false){
-        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBLuminance( features, 0, img, seg, id);
         features = getRGBDiff( features, 6, img, seg, id); // here has six attributes with abs and original values
         features = getLocations( features, 6 + 6 , img, seg, id);
         features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
@@ -580,7 +583,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     // #feature: 22   A: 0.511862
     if (false){
         // number of pixel weakens the outcome of classifier
-        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBLuminance( features, 0, img, seg, id);
         features = getRGBDiff( features, 6, img, seg, id); 
         features = getLocations( features, 6 + 6 , img, seg, id);
         features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
@@ -589,7 +592,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
 
     // #feature: 27  A: 0.51378
     if (false){
-        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBLuminance( features, 0, img, seg, id);
         features = getRGBDiff( features, 6, img, seg, id); // here has six attributes with abs and original values
         features = getLocations( features, 6 + 6 , img, seg, id);
         features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
@@ -598,7 +601,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
 
     // #feature: 33  A: 0.517115
     if (false){ 
-        features = getRGBLightness( features, 0, img, seg, id);
+        features = getRGBLuminance( features, 0, img, seg, id);
         features = getRGBDiff( features, 6, img, seg, id); 
         features = getLocations( features, 6 + 6 , img, seg, id);
         features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
@@ -606,15 +609,15 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     }*/
 
 	// #features: 45  A: 0.519499
-    getRGBLuminance(features, 0, pixelcount, img, seg, id);
-    getRGBDiff(features, 6, pixelcount, img, seg, id); 
-    getLocations(features, 12 , pixelcount, img, seg, id);
-    getSmoothness(features, 16, pixelcount, img, seg, id);
-    NeighbourScheme1(features, 21, img, seg, id);
+    features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
+    features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
+    features = getLocations(features, 12 , pixelcount, img, seg, id);
+    features = getSmoothness(features, 16, pixelcount, img, seg, id);
+    features = NeighbourScheme1(features, 21, pixelcount, img, seg, id);
 
     /*// #features: 63  A: 0.511859
     if (false){
-		features = getRGBLightness( features, 0, img, seg, id);
+		features = getRGBLuminance( features, 0, img, seg, id);
     	features = getRGBDiff( features, 6, img, seg, id); 
     	features = getLocations( features, 6 + 6 , img, seg, id);
     	features = getSmoothness( features, 6 + 6 + 4, img, seg, id);
@@ -623,12 +626,12 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     	features = NeighbourScheme3( features, 27 + 24, features[12],features[13], img, seg, id);
 	}
 
-/* Output all features to screen (this doesn't print out what the features are!)
-        cout << "(";
-        for (int i = 0; i < numFeatures ; i ++){
-            cout << features[i] << "," ;
-        }
-        cout << ")\n"; */
+// Output all features to screen (this doesn't print out what the features are!)
+//        cout << "(";
+//        for (int i = 0; i < numFeatures ; i ++){
+//            cout << features[i] << "," ;
+//        }
+//        cout << ")\n"; */
     return features;
 }
 
