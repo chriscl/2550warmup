@@ -1,7 +1,13 @@
 % -----
-% STANDARD TeX TEMPLATE
+% COMP2550/COMP3130 Warmup Project Report
 % CHRISTOPHER CLAOUE-LONG
 % -----
+
+% DELIVERABLES:
+%You need to submit your source code (in a tarball) and a two page technical report (as a PDF). Your report should include a description of your features, some example results (pictures), a numerical analysis of your algorithm, and answers to the following questions:
+%¥ What is the performance of your algorithm on the training set compared to the test set? Is this result expected?
+%¥ Why is it important to evaluate pixelwise accuracy instead of accuracy on the superpixels? ¥ What do you think is more important, the features or the machine learning classifier?
+%The software and two page report are due at 11:59pm on 22 March, 2012.
 % -
 % - DOCUMENT GEOMETRY SETUP
 \documentclass[11pt,a4paper]{article}
@@ -59,10 +65,20 @@ Jimmy Lin
 % -
 % -
 \begin{multicols}{2}
-\section{Overview}
+\section{Introduction and Overview}
 The task at hand for this warmup project was to implement a set of useful features for a computer vision task, using the open source Darwin framework for machine learning and the MSRC dataset.  The desired outcome was a feature vector that allowed the machine learning algorithms to classify images with over 50\% accuracy.
 
 \section{Method}
+
+First of all, we consider the texture of one superpixel. One possible implementation is to respectively discretize the lightness of marginal RGB value (9 for each interval length) and assign each pixel to those intervals based on their RGB lightness. The strength of this method is the tremendous informativeness and it does result in a satisfying accuracy increase (directly to arround 0.43) . However, that discretization method occupies too many dimensions of feature vector (87 attributes) to the extent that the classifier was badly sensitive to other features. Alternatively,we attempt the mean and standard deviation of absolute marginal RGB value (only 6 attributes). Expectedly, it produces a considerable rise with occupying fewer dimension of feature vector. (It will be demonstrated latter why occupation of less dimensions is vital.) 
+
+The second significant set of features is the mean and standard deviation of relative lightness of one pixel's marginal RGB value, that is, the lightness difference between the pairs of Red and Green, Green and Blue, Blue and Red. 
+
+On top of that, some other features that lead to comparatively slight accuracy advances are added into the our feature vector as well. For instance, the average smoothness counts the mean of RGB lightness difference of all pixels to their neighbour pixels. And location of one superpixel, more specifically, evalutates the mean and standard deviation of x,y coordinate of one pixel in its located image. The idea of adding this set of feature our final selection comes from the semantic perceptions that the higher stuff is more likely to be sky and that the lower stuff is more likely be ground or grass. 
+
+What we discussed before is all about the features of one superpixel itself. To further enhance the accuracy, we may need to, when forming the feature vector of one superpixel, take into consideration the brief information of neighboured superpixel. That is an intuitively meaningful approach because even human cannot recognize a small region without perceiving its surroundings. Yet, the experiments we have accomplished till now does not indicate the effectiveness of that approach. One possible reason is that the features we pick out for this approach provide little information regarding the surrounded environment of one superpixel. By the way, we apply some algorithm optimizations to reduce the time cost for training of classifier with neighbour superpixel detection, from about 6 hours to 25 minutes. One way to fulfill this progress is to replace linear list with hash set to minimize the time for membership evaluation. 
+
+
 The first few features we thought to implement were of course to measure the average red, green and blue values of a superpixel, since this would allow us to start differentiating between extremely different superpixels.  Adding a standard deviation of the pixels' colours compared to the average colours over the superpixel would also help differentiate further between superpixels of radically different texture/contrast.  We also tried out getting the difference and absolute difference between the red, green and blue average values across the superpixel to further bring out features dependent on the superpixel composition. \HUGEBOLD{CONTINUE HERE.}\\\\
 Intuition, thoughts and discussion on the CV features\\
 RGB values and std deviation, centre (position), average grayscale, difference between colours in a superpixel, neighbours, texture/contrast etc.
