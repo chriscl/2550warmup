@@ -1,10 +1,16 @@
 % -----
-% STANDARD TeX TEMPLATE
+% COMP2550/COMP3130 Warmup Project Report
 % CHRISTOPHER CLAOUE-LONG
 % -----
+
+% DELIVERABLES:
+%You need to submit your source code (in a tarball) and a two page technical report (as a PDF). Your report should include a description of your features, some example results (pictures), a numerical analysis of your algorithm, and answers to the following questions:
+%¥ What is the performance of your algorithm on the training set compared to the test set? Is this result expected?
+%¥ Why is it important to evaluate pixelwise accuracy instead of accuracy on the superpixels? ¥ What do you think is more important, the features or the machine learning classifier?
+%The software and two page report are due at 11:59pm on 22 March, 2012.
 % -
 % - DOCUMENT GEOMETRY SETUP
-\documentclass[12pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 \usepackage{geometry}
 \geometry{margin=20mm}
 \usepackage{lastpage}
@@ -42,25 +48,31 @@ urlcolor=black		% - URL colour
 % - MISC. SYMBOLS AND COMMANDS
 % - Thick horizontal blue line
 \newcommand{\Hrule}{\textcolor{blue}{\rule{\linewidth}{0.5mm}}}
+\newcommand{\HUGEBOLD}[1]{\textbf{\Huge{#1}}}
 % -----
 \begin{document}
 % -----
 % - Title
 \begin{center}
 \Hrule\\
-\textbf{\Huge COMP2550/COMP3130\\Warmup Project Report}\\
-\textbf{\large Christopher Claou\'e-Long and Jimmy Lin}\\
+\textbf{\Huge COMP2550/COMP3130 ANU\\Warmup Project Report}\\
+\textbf{\\\large Christopher Claou\'e-Long 
+(\href{mailto:u5183532@anu.edu.au}{\textit{\underline{\smash{u5183532@anu.edu.au}}}})\\
+Jimmy Lin 
+(\href{mailto:u5223173@anu.edu.au}{\textit{\underline{\smash{u5223173@anu.edu.au}}}})\\}
 \Hrule
 \end{center}
 % -
 % -
 \begin{multicols}{2}
-\section{Overview}
+\section{Introduction and Overview}
 The task at hand for this warmup project was to implement a set of useful features for a computer vision task, using the open source Darwin framework for machine learning and the MSRC dataset.  The desired outcome was a feature vector that allowed the machine learning algorithms to classify images with over 50\% accuracy.
 
 \section{Method}
 
 \hspace{4mm} First of all, we consider the texture of one superpixel. One possible implementation is to respectively discretize the lightness of marginal RGB value (9 for each interval length) and assign each pixel to those intervals based on their RGB lightness. The strength of this method is the tremendous informativeness and it does result in a satisfying accuracy increase (directly to arround 0.43) . However, that discretization method occupies too many dimensions of feature vector (87 attributes) to the extent that the classifier was badly sensitive to other features. Alternatively,we attempt the mean and standard deviation of absolute marginal RGB value (only 6 attributes). Expectedly, it produces a considerable rise with occupying fewer dimension of feature vector. (It will be demonstrated latter why occupation of less dimensions is vital.) 
+
+First of all, we consider the texture of one superpixel. One possible implementation is to respectively discretize the lightness of marginal RGB value (9 for each interval length) and assign each pixel to those intervals based on their RGB lightness. The strength of this method is the tremendous informativeness and it does result in a satisfying accuracy increase (directly to arround 0.43) . However, that discretization method occupies too many dimensions of feature vector (87 attributes) to the extent that the classifier was badly sensitive to other features. Alternatively,we attempt the mean and standard deviation of absolute marginal RGB value (only 6 attributes). Expectedly, it produces a considerable rise with occupying fewer dimension of feature vector. (It will be demonstrated latter why occupation of less dimensions is vital.) 
 
 The second significant set of features is the mean and standard deviation of relative lightness of one pixel's marginal RGB value, that is, the lightness difference between the pairs of Red and Green, Green and Blue, Blue and Red. 
 
@@ -73,6 +85,20 @@ Accuracy tables with different features implemented.\\
 
 \section{Discussion}
 Interpretation of results, what went well, what went wrong (overfitting?), what could be done better. \\
+
+The first few features we thought to implement were of course to measure the average red, green and blue values of a superpixel, since this would allow us to start differentiating between extremely different superpixels.  Adding a standard deviation of the pixels' colours compared to the average colours over the superpixel would also help differentiate further between superpixels of radically different texture/contrast.  We also tried out getting the difference and absolute difference between the red, green and blue average values across the superpixel to further bring out features dependent on the superpixel composition. \HUGEBOLD{CONTINUE HERE.}\\\\
+Intuition, thoughts and discussion on the CV features\\
+RGB values and std deviation, centre (position), average grayscale, difference between colours in a superpixel, neighbours, texture/contrast etc.
+
+\section{Results}
+Pictures, maybe accuracy tables with different features implemented?
+
+\section{Discussion}
+numerical analysis of your algorithm - emailed Stephen for clarification on this.\\
+What is the performance of your algorithm on the training set compared to the test set? Is this result expected?\\
+Why is it important to evaluate pixelwise accuracy instead of accuracy on the superpixels?\\
+What do you think is more important, the features or the machine learning classifier?\\
+Interpretation of results, what went well, what went wrong (overfitting?), what could be done better.
 
 \section{References}
 S. Gould. DARWIN: A Framework for Machine Learning and Computer Vision Research and Development. In \textit{Journal of Machine Learning Research (JMLR)}, 2012.\\
