@@ -12,13 +12,18 @@ echo -e "\n \n Training... \n \n"
 ../../bin/trainCOMP3130Model -verbose -o model.xml data/images/train/ data/labels/
 
 # Test the program
-echo -e "\n \n Testing... \n \n"
+echo -e "\n \n Testing on test set... \n \n"
+../../bin/testCOMP3130Model -verbose -x -o resultsTest model.xml data/images/test/
 
-../../bin/testCOMP3130Model -verbose -x -o results model.xml data/images/test/
+echo -e "\n \n Testing on training set... \n \n"
+../../bin/testCOMP3130Model -verbose -x -o resultsTrain model.xml data/images/train/
+
 
 # Score the program
 echo -e "\n \n Scoring... \n \n"
 # Get today's date and time
 thetime=`date +%Y-%m-%d--%H:%M:%S`
-../../bin/scoreCOMP3130Results results/ data/labels/ > $thetime.results.txt
-echo -e "\n \n Results matrix saved to "$thetime".results.txt"
+../../bin/scoreCOMP3130Results resultsTest/ data/labels/ > $thetime.testresults.txt
+echo -e "\n \n Results matrix saved to "$thetime".testresults.txt"
+../../bin/scoreCOMP3130Results resultsTrain/ data/labels/ > $thetime.trainresults.txt
+echo -e "\n \n Results matrix saved to "$thetime".trainresults.txt"
