@@ -66,31 +66,53 @@ Jimmy Lin
 % -
 \begin{multicols}{2}
 \section{Introduction and Overview}
-The field of computer vision is often thought of as a diverse topic, however in reality there are three major paths to which each project can be linked.  The first two, scene categorisation and object detection, aim to provide a summary of a scene using tags and to detect discrete objects within an image respectively, however do not deliver an accurate object outline nor consider the image as a whole such as what happens in one portion of human vision.  The task at hand for this warmup project was to further the third path of annotating an entire image at the pixel level, by considering a unified cluster of pixels as a superpixel and extracting a set of useful features to check against using the open source Darwin framework for machine learning and the MSRC dataset.  The desired outcome was a feature vector that allowed machine learning algorithms to classify images with over 50\% accuracy.
+The field of computer vision is often thought of as a diverse topic, however in reality there are three major paths to which each project can be linked.  The first two -- scene categorisation and object detection -- aim to provide a summary of a scene using tags or bounding boxes around discrete objects, however do not deliver an accurate object outline nor consider the image as a whole like what happens in human vision.
+
+The task for this warmup project was to further the third path of research: annotating an entire image at the pixel level to describe the entire scene.  This would be done by considering a unified cluster of pixels (a superpixel) and extracting a set of useful features to check against using the open source Darwin framework for machine learning and the MSRC dataset.  The desired outcome was a feature vector that allowed machine learning algorithms to classify superpixels in images with at least 50\% accuracy.
 
 \section{Method}
 
-The first few features implemented were the average red, green and blue values of the superpixel, since this would begin to differentiate between extremely different superpixels, such as those describing sky and grass.  Adding in the standard deviation of these colours could also help differentiate between differently textured models.  We also tried out getting the difference and absolute difference between the red, green and blue average values across the superpixel to further bring out features dependent on the superpixel composition. Other features tested include the average gradient in the superpixel, its centre to know the general location within the image (to help differentiate between sky and water for example), and taking into consideration the differences between the superpixel's immediate neighbours and itself, intuitively approximating the outlines of objects to help the classifier decide what superpixels are more likely to be when in close proximity to superpixels of another type.
+The first few features implemented were the average red, green and blue values of the superpixel, since this would begin to differentiate between extremely different superpixels such as those describing sky and grass.  Adding in the standard deviation of these colours could also help differentiate between differently textured models.  Calculating the difference and absolute difference between the red, green and blue average values across the superpixel to further bring out features dependent on the superpixel composition may also help the classifier decide what label to apply. Other features tested include the average gradient % the "smoothness"
+ in the superpixel, its centre to know the general location within the image (to help differentiate between sky and water for example), and taking into consideration the differences between the superpixel's immediate neighbours and itself using a hash set for speed to intuitively approximate the outlines of objects to help the classifier decide what superpixels are more likely to be when in close proximity to superpixels of another type.
 
 \begin{comment}
-First of all, we consider the texture of one superpixel. One possible implementation is to respectively discretize the lightness of marginal RGB value (9 for each interval length) and assign each pixel to those intervals based on their RGB lightness. The strength of this method is the tremendous informativeness and it does result in a satisfying accuracy increase (directly to arround 0.43) . However, that discretization method occupies too many dimensions of feature vector (87 attributes) to the extent that the classifier was badly sensitive to other features. Alternatively,we attempt the mean and standard deviation of absolute marginal RGB value (only 6 attributes). Expectedly, it produces a considerable rise with occupying fewer dimension of feature vector. (It will be demonstrated latter why occupation of less dimensions is vital.) 
+the average smoothness counts the mean of RGB lightness difference of all pixels to their neighbour pixels. 
 
-The second significant set of features is the mean and standard deviation of relative lightness of one pixel's marginal RGB value, that is, the lightness difference between the pairs of Red and Green, Green and Blue, Blue and Red. 
+And location of one superpixel, more specifically, evalutates the mean and standard deviation of x,y coordinate of one pixel in its located image. 
 
-On top of that, some other features that lead to comparatively slight accuracy advances are added into the our feature vector as well. For instance, the average smoothness counts the mean of RGB lightness difference of all pixels to their neighbour pixels. And location of one superpixel, more specifically, evalutates the mean and standard deviation of x,y coordinate of one pixel in its located image. The idea of adding this set of feature our final selection comes from the semantic perceptions that the higher stuff is more likely to be sky and that the lower stuff is more likely be ground or grass. 
+To further enhance the accuracy, we may need to, when forming the feature vector of one superpixel, take into consideration the brief information of neighboured superpixel. 
 
-What we discussed before is all about the features of one superpixel itself. To further enhance the accuracy, we may need to, when forming the feature vector of one superpixel, take into consideration the brief information of neighboured superpixel. That is an intuitively meaningful approach because even human cannot recognize a small region without perceiving its surroundings. Yet, the experiments we have accomplished till now does not indicate the effectiveness of that approach. One possible reason is that the features we pick out for this approach provide little information regarding the surrounded environment of one superpixel. By the way, we apply some algorithm optimizations to reduce the time cost for training of classifier with neighbour superpixel detection, from about 6 hours to 25 minutes. One way to fulfill this progress is to replace linear list with hash set to minimize the time for membership evaluation. 
+That is an intuitively meaningful approach because even human cannot recognize a small region without perceiving its surroundings. 
+
+Yet, the experiments we have accomplished till now does not indicate the effectiveness of that approach.
+
+ One possible reason is that the features we pick out for this approach provide little information regarding the surrounded environment of one superpixel. 
+ 
+ By the way, we apply some algorithm optimizations to reduce the time cost for training of classifier with neighbour superpixel detection, from about 6 hours to 25 minutes. 
+ 
+ One way to fulfill this progress is to replace linear list with hash set to minimize the time for membership evaluation. 
 \end{comment}
 
 \section{Results}
 Pictures, maybe accuracy tables with different features implemented?
 
 \section{Discussion}
-numerical analysis of your algorithm - accuracy, number of features, efficiency/running-time estimate, see how this changes with certain algorithm parameters (eg number of features, depth of decision tree, broken down by class, etc)
-What is the performance of your algorithm on the training set compared to the test set? Is this result expected?\\
-Why is it important to evaluate pixelwise accuracy instead of accuracy on the superpixels?\\
-What do you think is more important, the features or the machine learning classifier?\\
-Interpretation of results, what went well, what went wrong (overfitting?), what could be done better.
+While the accuracy is above the desired outcome, the efficiency of the algorithm is quite low when considering neighbours since in memory this is respresented as a linear list.  A way to speed this up is to use a hash set to index the neighbours in O(1) instead of O(n) time.
+
+Accuracy discussion
+
+Where the algorithm fails - animals and objects with outlines of similar appearance especially!
+
+Performance on training set compared to test set, is this difference expected?
+
+Changes when modifying depth of decision tree
+
+Why is it important to evaluate pixelwise accuracy instead of accuracy on the superpixels?  Checking accuracy of a superpixel  is difficult, since it may overlap multiple different may overlap onto different label areas, making it impossible to check consistently whether the superpixel was labelled correctly.  Pixelwise accuracy has no possible overlap, ensuring that the overall accuracy of the machine learning algorithm is measured correctly.
+
+What do you think is more important, the features or the machine learning classifier? Machine learning classifiers can be built in multiple ways - vector distance tests, binary search trees, hash sets, cosine similarity, comparing individual features, considering features as a whole, and so on.  However, these classifers are only as good as the features they are given -- it is therefore crucial to discover a set of features that allows the classifier to differentiate superpixels accurately.
+
+
+Possible improvements include considering a neighbourhood wider than a superpixel's immediate neighbours (to help differentiate buildings and sky, faces/flowers and surrounds etc), taking into account the texture
 
 \section{References}
 S. Gould. DARWIN: A Framework for Machine Learning and Computer Vision Research and Development. In \textit{Journal of Machine Learning Research (JMLR)}, 2012.\\
