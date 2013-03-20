@@ -284,8 +284,7 @@ vector<double> getSmoothness(vector<double> features, int index, int pixels, con
 }
 
 // Return a list of detected neighbours as a set 
-set<int> detectNeighbours(int y, int x,set<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id)
-{
+set<int> detectNeighbours(int y, int x,set<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id){
 /*{{{*/
     if (x > 0 && x < seg.cols && y > 0 && y < seg.rows) {
         ;
@@ -307,9 +306,7 @@ set<int> detectNeighbours(int y, int x,set<int> neighbours, const cv::Mat& img, 
 }
 
 //TODO
-set<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) 
-{
-/*{{{*/
+set<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) {
     set<int> neighbours;
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
@@ -334,7 +331,6 @@ set<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id)
         }
         cout  << ")\n";
     }
-/*}}}*/
     return neighbours;
 }
 
@@ -348,9 +344,7 @@ double getSimilarity(vector<double> vec1, vector<double> vec2, int index1, int i
 }
 
 // TODO
-int findSimilarNeighbour(set<int> neighbours, list<double> simList, bool maximum)
-{
-/*{{{*/
+int findSimilarNeighbour(set<int> neighbours, list<double> simList, bool maximum){
     int index = 0;
     int optimum;
     int i;
@@ -374,14 +368,14 @@ int findSimilarNeighbour(set<int> neighbours, list<double> simList, bool maximum
         if (i == index) return *itor;
         else continue;
     }
-/*}}}*/
+    return optimum;
 }
 
 // feature selection based on neighbours --------------------------------
-// TODO
-vector<double> NeighbourScheme1 (vector<double> features,int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id)
-{ // 24 attributes
-/*{{{*/
+/* Defines a hashset with all neighbouring superpixels, finds the most and least
+ * similar and adds their luminance and RGB difference values to the feature
+ * vector */
+vector<double> NeighbourScheme1 (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id){ // 24 attributes
     set<int> neighbours;
     list<double> similarity;
     vector<double> temp( 87, 0.0);
@@ -400,83 +394,11 @@ vector<double> NeighbourScheme1 (vector<double> features,int index, int pixels, 
     features = getRGBLuminance( features, index, pixelcount, img, seg, mostsim_neighbour_id);
     features = getRGBDiff( features, index + 6, pixelcount, img, seg, mostsim_neighbour_id);
 
-    pixelcount = getPixelCount(seg, mostsim_neighbour_id);
+    pixelcount = getPixelCount(seg, leastsim_neighbour_id);
     features = getRGBLuminance( features, index + 12, pixelcount, img, seg, leastsim_neighbour_id);
     features = getRGBDiff( features, index + 18, pixelcount, img, seg, leastsim_neighbour_id);
-/*}}}*/
     return features;
 }
-
-/*
-vector<double> NeighbourScheme2 (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id)
-{ // attributes
-    set<int> neighbours;
-    neighbours = getNeighbours( img, seg, id);
-    features = getNeighboursLightness (features,neighbours, index, img, seg);
-
-    return features;
-}
-
-vector<double> NeighbourScheme3 (vector<double> features, int index,int meanY, int meanX, const cv::Mat& img, const cv::Mat& seg, int id) 
-{
-    int sideLength = 70; // unit:pixels
-
-    // -----------------------------------
-     int numOfpixel = 0;
-     unsigned char blue, green, red;
-     Vec3b intensity;
-     
-     int left, right, bottom, top;
-    if ( meanX - sideLength < 0) left = 0;
-    if ( meanX + sideLength > seg.cols - 1) right = seg.cols - 1;
-    if ( meanY - sideLength < 0) bottom = 0;
-    if ( meanY + sideLength > seg.rows - 1) top = seg.rows - 1;
-
-     for (int y = bottom; y < top; y++){
-        for (int x = left; x < right; x++){
-            if (seg.at<int>(y,x) == id){
-                continue;
-            }
-            intensity = img.at<Vec3b>(y,x);
-            blue = intensity.val[0];
-            green = intensity.val[1];
-            red = intensity.val[2];
-            features[index] += (int) red;
-            features[index+1] += (int) green;
-            features[index+2] += (int) blue;
-            features[index+3] += abs((int) (red - green));
-            features[index+4] += abs((int) (green - blue));
-            features[index+5] += abs((int) (blue - red));
-            features[index+6] += ((int) (red - green));
-            features[index+7] += ((int) (green - blue));
-            features[index+8] += ((int) (blue - red));
-            numOfpixel ++;
-        }
-     }
-     for (int i = index; i < index + 9; i ++) {
-        features[i] /= 1.0 * numOfpixel;
-     }
-     numOfpixel = 0;
-     for (int y = bottom; y < top; y++){
-        for (int x = left; x < right; x++){
-            if (seg.at<int>(y,x) == id){
-                continue;
-            }
-            intensity = img.at<Vec3b>(y,x);
-            blue = intensity.val[0];
-            green = intensity.val[1];
-            red = intensity.val[2];
-            features[index+9] += abs(((int) red) - features[0]) * abs(((int) red) - features[0]);
-            features[index+10] += abs(((int) green) - features[1]) * abs(((int) green) - features[1]);
-            features[index+11] += abs(((int) blue) - features[2]) * abs(((int) blue) - features[2]);
-            numOfpixel ++;
-        }
-    }
-     for (int i = index + 9; i < index + 12; i ++) {
-        features[i] /= 1.0 * numOfpixel;
-     }
-    return features;
-} */
 
 // getSuperpixelFeatures -----------------------------------------------------
 // This function extracts a feature vector for the superpixel with given id.
@@ -492,7 +414,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
     features = getLocations(features, 12 , pixelcount, img, seg, id);
     features = getSmoothness(features, 16, pixelcount, img, seg, id);
-    features = NeighbourScheme1(features, 21, pixelcount, img, seg, id);
+    features = NeighbourScheme1(features, 21, img, seg, id);
     
     return features;
 } 
