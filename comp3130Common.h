@@ -109,9 +109,9 @@ int getPixelCount(const cv::Mat& seg, int id){ // 6 attributes
 }
 
 /* Calculate the average xy location (the centre) of the superpixel, adding it 
- * to the features vector at the index value.
- * DEPRECATED - STANDARD DEVIATION SINCE A SUPERPIXEL IS NOT UNIFORM ENOUGH FOR THIS TO BE USEFUL
- * REQUIRES 2 VECTOR VALUES */
+ * to the features vector at the index value as well as the standard deviation
+ * within the superpixel
+ * REQUIRES 4 VECTOR VALUES */
 vector<double> getLocations (vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
@@ -126,7 +126,7 @@ vector<double> getLocations (vector<double> features, int index, int pixels, con
     for (int i = index; i < index + 2; i ++) {
         features[i] /= (1.0 * pixels);
      }
-    /* Calculate the average deviation
+    // Calculate the average deviation
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
@@ -139,7 +139,7 @@ vector<double> getLocations (vector<double> features, int index, int pixels, con
     // Convert to standard deviation
     for (int i = index + 2; i < index + 4; i ++) {
         features[i] = sqrt(features[i]/ (1.0 * pixels));
-	}*/
+	}
 	return features;
 }
 
