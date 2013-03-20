@@ -22,7 +22,7 @@ using namespace Eigen;
  * at the index value. 
  * REQUIRES 6 VECTOR VALUES */
 vector<double> getRGBLuminance(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
-     unsigned char blue, green, red;
+     double blue, green, red;
      Vec3b intensity;
      for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
@@ -30,19 +30,19 @@ vector<double> getRGBLuminance(vector<double> features, int index, int pixels, c
                 continue;
             }
             intensity = img.at<Vec3b>(y,x);
-            blue = intensity.val[0];
+            blue = intensity.val[0]; // converts from int into doubles
             green = intensity.val[1];
             red = intensity.val[2];
-            features[index] += (int) red;
-            features[index+1] += (int) green;
-            features[index+2] += (int) blue;
+            features[index] += red;
+            features[index+1] += green;
+            features[index+2] += blue;
         }
      }
-     // Set the luminance values to the average over the superpixel
+     // Set the luminance values to the mean over the superpixel
      for (int i = index; i < index + 3; i ++) {
         features[i] /= (1.0 * pixels);
      }
-	// Calculate the average deviation
+	// Calculate the deviation of each pixel from the mean in the superpixel
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
@@ -52,9 +52,9 @@ vector<double> getRGBLuminance(vector<double> features, int index, int pixels, c
             blue = intensity.val[0];
             green = intensity.val[1];
             red = intensity.val[2];
-            features[index+3] += ((((int) red) - features[index]) * (((int) red) - features[index]));
-            features[index+4] += ((((int) green) - features[index+1]) * (((int) green) - features[index+1]));
-            features[index+5] += ((((int) blue) - features[index+2]) * (((int) blue) - features[index+2]));
+            features[index+3] += pow((red - features[index]),2); //((((int) red) - features[index]) * (((int) red) - features[index]));
+            features[index+4] += pow((green - features[index+1]),2); //((((int) green) - features[index+1]) * (((int) green) - features[index+1]));
+            features[index+5] += pow((blue - features[index+2]),2); //((((int) blue) - features[index+2]) * (((int) blue) - features[index+2]));
         }
     }
     // Convert to standard deviation
@@ -69,7 +69,7 @@ vector<double> getRGBLuminance(vector<double> features, int index, int pixels, c
  * vector starting at the index value.
  * REQUIRES 6 VECTOR VALUES */
 vector<double> getRGBDiff(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
-     unsigned char blue, green, red;
+     double blue, green, red;
      Vec3b intensity;
      for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
@@ -80,14 +80,17 @@ vector<double> getRGBDiff(vector<double> features, int index, int pixels, const 
             blue = intensity.val[0];
             green = intensity.val[1];
             red = intensity.val[2];
-            features[index] += abs((int) (red - green));
-            features[index+1] += abs((int) (green - blue));
-            features[index+2] += abs((int) (blue - red));
-            features[index+3] += ((int) (red - green));
-            features[index+4] += ((int) (green - blue));
-            features[index+5] += ((int) (blue - red));
+            // absolute difference between superpixel colours
+            features[index] += abs(red - green);
+            features[index+1] += abs(green - blue);
+            features[index+2] += abs(blue - red);
+            // standard difference between superpixel colours
+            features[index+3] += (red - green);
+            features[index+4] += (green - blue);
+            features[index+5] += (blue - red);
         }
      }
+     // convert to average differences
      for (int i = index; i < index + 6; i ++) {
         features[i] /= (1.0 * pixels);
      }
@@ -95,7 +98,7 @@ vector<double> getRGBDiff(vector<double> features, int index, int pixels, const 
 }
 
 // Calculate the number of pixels in the given superpixel
-int getPixelCount(const cv::Mat& seg, int id){ // 6 attributes
+int getPixelCount(const cv::Mat& seg, int id){
      int pixels = 0;
      for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
@@ -126,7 +129,7 @@ vector<double> getLocations (vector<double> features, int index, int pixels, con
     for (int i = index; i < index + 2; i ++) {
         features[i] /= (1.0 * pixels);
      }
-    // Calculate the average deviation
+    // Calculate the deviation of pixels from the average over the superpixel
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
@@ -143,14 +146,12 @@ vector<double> getLocations (vector<double> features, int index, int pixels, con
 	return features;
 }
 
-//TODO
-vector<double> getMarginalDistribution(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id){
-    int numOfpixel;
-    unsigned char blue, green, red;
+// TODO returns a stepped marginal distribution?
+vector<double> getMarginalDistribution(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
+    double blue, green, red;
     Vec3b intensity;
-    numOfpixel = 0;
     int step = 9;
-    int spaceClass = 255 / step + 1;
+    int spaceClass = 255 / (step + 1);
     int cblue,cgreen,cred;
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
@@ -161,59 +162,20 @@ vector<double> getMarginalDistribution(vector<double> features, int index, const
             blue = intensity.val[0];
             green = intensity.val[1];
             red = intensity.val[2];
-            cblue = ((int)blue) / step;
-            cgreen = ((int)green) / step;
             cred = ((int)red) / step;
-            //cout << "\n(" << (int)blue << "->" << cblue << ", " << (int)green << "->" << cgreen << ", " << (int)red << "->" << cred << ")\n";
+            cgreen = ((int)green) / step;
+            cblue = ((int)blue) / step;
             // Category assignment
             features[index+cred] += 1.0 ;
             features[index+spaceClass+cgreen] += 1.0 ;
             features[index+2*spaceClass+cblue] += 1.0 ;
-            numOfpixel += 1;
         }
     }
     for (int i = index ; i < index + 3 * spaceClass; i ++){
-        features[i] /= 1.0 * numOfpixel;
+        features[i] /= 1.0 * pixels;
     }
     return features;
 }
-
-/*vector<double> getMarginalDistributionWithLocation(vector<double> features, int index, const cv::Mat& img, const cv::Mat& seg, int id){
-    int numOfpixel;
-    unsigned char blue, green, red;
-    Vec3b intensity;
-    numOfpixel = 0;
-    int step = 9;
-    int spaceClass = 255 / step + 1;
-    int cblue,cgreen,cred;
-
-    vector<double> temp(4,0.0);
-    temp = getLocations( temp, 0, img, seg, id);
-
-    for (int y = 0; y < seg.rows; y++){
-        for (int x = 0; x < seg.cols; x++){
-            if (seg.at<int>(y,x) != id){
-                continue;
-            }
-            intensity = img.at<Vec3b>(y,x);
-            blue = intensity.val[0];
-            green = intensity.val[1];
-            red = intensity.val[2];
-            cblue = ((int)blue) / step;
-            cgreen = ((int)green) / step;
-            cred = ((int)red) / step;
-            //cout << "\n(" << (int)blue << "->" << cblue << ", " << (int)green << "->" << cgreen << ", " << (int)red << "->" << cred << ")\n";
-            // Category assignment 
-            features[index+cred] += 1.0 * ( (x-temp[1])*(x-temp[1])  + (y-temp[0])* (y-temp[0])  ) ;
-            features[index+spaceClass+cgreen] += 1.0 * ( (x-temp[1])*(x-temp[1])  + (y-temp[0])* (y-temp[0])  ) ;
-            features[index+2*spaceClass+cblue] += 1.0 *  ( (x-temp[1])*(x-temp[1])  + (y-temp[0])* (y-temp[0])  );
-            numOfpixel += 1;
-        }
-    }
-    for (int i = index ; i < index + 3 * spaceClass; i ++){
-        features[i] /= 1.0 * numOfpixel;
-    }
-}*/
 
 /* TODO Calculate the average gradient(?)
  * REQUIRES 5 VECTOR VALUES */
@@ -283,36 +245,36 @@ vector<double> getSmoothness(vector<double> features, int index, int pixels, con
     return features;
 }
 
-// Return a list of detected neighbours as a set 
-set<int> detectNeighbours(int y, int x,set<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id){
-/*{{{*/
-    if (x > 0 && x < seg.cols && y > 0 && y < seg.rows) {
-        ;
-    } else {
-        return neighbours;
-    }
-
+// TODO CHECK SEGCOLS AND SEGROWS Return a list of detected neighbours as a set 
+set<int> getNeighbours(int y, int x,set<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id){
+	if (!(x >= 0 && x < seg.cols && y >= 0 && y < seg.rows)){ 
+        return neighbours; // x or y coordinate value out of range of the picture! Return input.
+    } // else carry on
     int id = seg.at<int>(y,x);
     if (id != expected_id) {
-        /* a distinct superpixel */
+        // found a distinct superpixel, could be a new neighbour
         set<int>::const_iterator got = neighbours.find(id);
-        if (got == neighbours.end()){
-            // not found in set
+        if (got == neighbours.end()){ // not found in set
             neighbours.insert(id);
         } 
     }
     return neighbours;
-/*}}}*/
 }
 
-//TODO
-set<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) {
+// Return a set of neighbouring superpixels
+set<int> findNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) {
     set<int> neighbours;
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
                 continue;
             } 
+            for (int i = -1; i < 2; i++){
+            	for (int j = -1; j < 2; j++){
+            		neighbours = getNeighbours(y+j, x-i, neighbours, img, seg, id);
+            	}
+            }
+            /*
             neighbours = detectNeighbours( y-1, x-1, neighbours, img, seg, id);
             neighbours = detectNeighbours( y-1, x, neighbours, img, seg, id);
             neighbours = detectNeighbours( y-1, x+1, neighbours, img, seg, id);
@@ -322,19 +284,13 @@ set<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) {
             neighbours = detectNeighbours( y+1, x-1, neighbours, img, seg, id);
             neighbours = detectNeighbours( y+1, x, neighbours, img, seg, id);
             neighbours = detectNeighbours( y+1, x+1, neighbours, img, seg, id);
+            */
         }
-    }
-    if (0) {
-        cout << "(" << id << ":"<< neighbours.size() <<":";
-        for (set<int>::iterator itor = neighbours.begin(); itor != neighbours.end(); ++itor){
-            cout << *itor << ",";
-        }
-        cout  << ")\n";
     }
     return neighbours;
 }
 
-// TODO
+// TODO find a better way of calculating similarity
 double getSimilarity(vector<double> vec1, vector<double> vec2, int index1, int index2, int len){
     double sim = 0.0;
     for (int i = 0 ; i < len; i ++){
@@ -343,20 +299,20 @@ double getSimilarity(vector<double> vec1, vector<double> vec2, int index1, int i
     return sim;
 }
 
-// TODO
-int findSimilarNeighbour(set<int> neighbours, list<double> simList, bool maximum){
+// Returns the optimum similar neighbour (maximum/minimum similarity)
+int findSimilarNeighbour(set<int> neighbours, list<double> simList, bool findMaxSim){
     int index = 0;
     int optimum;
     int i;
-    if (maximum) optimum = -1; // find maximum
+    if (findMaxSim) optimum = -1; // find maximum
     else optimum = 100; // find minimum
 
     i = 0;
     for ( list<double>::iterator itor = simList.begin() ; itor != simList.end(); ++ itor, i++) {
-        if (maximum && *itor > optimum) {
+        if (findMaxSim && *itor > optimum) {
             optimum = *itor;
             index = i;
-        } else if (!maximum && *itor < optimum) {
+        } else if (!findMaxSim && *itor < optimum) {
             optimum = *itor;
             index = i;
         }
@@ -380,15 +336,16 @@ vector<double> NeighbourScheme1 (vector<double> features,int index, const cv::Ma
     list<double> similarity;
     vector<double> temp( 87, 0.0);
     int leastsim_neighbour_id , mostsim_neighbour_id;
+    int neighbourPixels;
 
-    neighbours = getNeighbours( img, seg, id);
+    neighbours = findNeighbours( img, seg, id);
     for (set<int>::iterator itor = neighbours.begin() ; itor != neighbours.end(); ++ itor) {
-        temp = getMarginalDistribution( temp, 0, img, seg, *itor);
+    	neighbourPixels = getPixelCount(seg, id);
+        temp = getMarginalDistribution( temp, 0, neighbourPixels, img, seg, *itor);
         similarity.push_back(getSimilarity(features, temp, 0, 0, temp.size()));
     }
     mostsim_neighbour_id = findSimilarNeighbour(neighbours, similarity, true);
     leastsim_neighbour_id = findSimilarNeighbour(neighbours, similarity, false);
-    // cout << id << ":"<<mostsim_neighbour_id << ":" << leastsim_neighbour_id << "\n";
  
     int pixelcount = getPixelCount(seg, mostsim_neighbour_id);
     features = getRGBLuminance( features, index, pixelcount, img, seg, mostsim_neighbour_id);
