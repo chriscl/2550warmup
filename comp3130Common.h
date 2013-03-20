@@ -11,7 +11,7 @@
 **              Chris Claoue-Long <u5183532@anu.edu.au>
 *****************************************************************************/
 #include <cmath>
-#include <list>
+#include <set>
 using namespace std;
 using namespace Eigen;
 
@@ -283,36 +283,39 @@ vector<double> getSmoothness(vector<double> features, int index, int pixels, con
     return features;
 }
 
-// Return a list of detected neighbours as a list
-list<int> detectNeighbours(int y, int x, list<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id){
-    if (!(x > 0 && x < seg.cols && y > 0 && y < seg.rows)){
-        return neighbours; // index values are outside of the range of pixels
-    }
-    int id = seg.at<int>(y,x);
-    if (id != expected_id) {
-        // It's a distinct superpixel
-        for (list<int>::iterator itor = neighbours.begin(); itor != neighbours.end(); ++itor){
-            if (id == *itor) {
-                // neigbhours pre-existing in list
-                return neighbours; 
-            }
-            else continue;
-        }
-        neighbours.push_back (id); // superpixel not in list, add it
+// Return a list of detected neighbours as a set 
+set<int> detectNeighbours(int y, int x,set<int> neighbours, const cv::Mat& img, const cv::Mat& seg, int expected_id)
+{
+/*{{{*/
+    if (x > 0 && x < seg.cols && y > 0 && y < seg.rows) {
+        ;
+    } else {
         return neighbours;
     }
-    return neighbours; // neighbour already in list
+
+    int id = seg.at<int>(y,x);
+    if (id != expected_id) {
+        /* a distinct superpixel */
+        set<int>::const_iterator got = neighbours.find(id);
+        if (got == neighbours.end()){
+            // not found in set
+            neighbours.insert(id);
+        } 
+    }
+    return neighbours;
+/*}}}*/
 }
 
-// TODO
-list<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) {
-    list<int> neighbours;
+//TODO
+set<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) 
+{
+/*{{{*/
+    set<int> neighbours;
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
             if (seg.at<int>(y,x) != id){
                 continue;
-            }
-            
+            } 
             neighbours = detectNeighbours( y-1, x-1, neighbours, img, seg, id);
             neighbours = detectNeighbours( y-1, x, neighbours, img, seg, id);
             neighbours = detectNeighbours( y-1, x+1, neighbours, img, seg, id);
@@ -326,11 +329,12 @@ list<int> getNeighbours(const cv::Mat& img, const cv::Mat& seg, int id) {
     }
     if (0) {
         cout << "(" << id << ":"<< neighbours.size() <<":";
-        for (list<int>::iterator itor = neighbours.begin(); itor != neighbours.end(); ++itor){
+        for (set<int>::iterator itor = neighbours.begin(); itor != neighbours.end(); ++itor){
             cout << *itor << ",";
         }
         cout  << ")\n";
     }
+/*}}}*/
     return neighbours;
 }
 
@@ -340,12 +344,12 @@ double getSimilarity(vector<double> vec1, vector<double> vec2, int index1, int i
     for (int i = 0 ; i < len; i ++){
         sim += vec1[i+index1] * vec2[i+index2];
     }
-
     return sim;
 }
 
 // TODO
-int findSimilarNeighbour(list<int> neighbours, list<double> simList, bool maximum){
+int findSimilarNeighbour(set<int> neighbours, list<double> simList, bool maximum)
+{
 /*{{{*/
     int index = 0;
     int optimum;
@@ -366,25 +370,25 @@ int findSimilarNeighbour(list<int> neighbours, list<double> simList, bool maximu
     }
     
     i = 0;
-    for (list<int>::iterator itor = neighbours.begin() ; itor != neighbours.end(); ++ itor, i++) {
+    for (set<int>::iterator itor = neighbours.begin() ; itor != neighbours.end(); ++ itor, i++) {
         if (i == index) return *itor;
         else continue;
     }
-    return optimum;
 /*}}}*/
 }
 
 // feature selection based on neighbours --------------------------------
-
 // TODO
-vector<double> NeighbourScheme1 (vector<double> features,int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){ // 24 attributes
-    list<int> neighbours;
+vector<double> NeighbourScheme1 (vector<double> features,int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id)
+{ // 24 attributes
+/*{{{*/
+    set<int> neighbours;
     list<double> similarity;
     vector<double> temp( 87, 0.0);
     int leastsim_neighbour_id , mostsim_neighbour_id;
 
     neighbours = getNeighbours( img, seg, id);
-    for (list<int>::iterator itor = neighbours.begin() ; itor != neighbours.end(); ++ itor) {
+    for (set<int>::iterator itor = neighbours.begin() ; itor != neighbours.end(); ++ itor) {
         temp = getMarginalDistribution( temp, 0, img, seg, *itor);
         similarity.push_back(getSimilarity(features, temp, 0, 0, temp.size()));
     }
@@ -392,66 +396,29 @@ vector<double> NeighbourScheme1 (vector<double> features,int index, int pixels, 
     leastsim_neighbour_id = findSimilarNeighbour(neighbours, similarity, false);
     // cout << id << ":"<<mostsim_neighbour_id << ":" << leastsim_neighbour_id << "\n";
  
-    features = getRGBLuminance( features, index, pixels, img, seg, mostsim_neighbour_id);
-    features = getRGBDiff( features, index + 6, pixels, img, seg, mostsim_neighbour_id);
-    features = getRGBLuminance( features, index + 12, pixels, img, seg, leastsim_neighbour_id);
-    features = getRGBDiff( features, index + 18, pixels, img, seg, leastsim_neighbour_id);
-    //features = getMarginalDistribution( features, index , img, seg, leastsim_neighbour_id);
+    int pixelcount = getPixelCount(seg, mostsim_neighbour_id);
+    features = getRGBLuminance( features, index, pixelcount, img, seg, mostsim_neighbour_id);
+    features = getRGBDiff( features, index + 6, pixelcount, img, seg, mostsim_neighbour_id);
+
+    pixelcount = getPixelCount(seg, mostsim_neighbour_id);
+    features = getRGBLuminance( features, index + 12, pixelcount, img, seg, leastsim_neighbour_id);
+    features = getRGBDiff( features, index + 18, pixelcount, img, seg, leastsim_neighbour_id);
+/*}}}*/
     return features;
 }
 
-// TODO
-bool isInList (int id, list<int> L){
-    for (list<int>::iterator itor = L.begin() ; itor != L.end(); ++itor) {
-        if (id == *itor) return true;
-        else continue;
-    }
-    return false;
-}
-
-/*void getNeighboursMarginalDistribution(vector<double> features, list<int> neighbours, int index, const cv::Mat& img, const cv::Mat& seg){
-    int numOfpixel;
-    unsigned char blue, green, red;
-    Vec3b intensity;
-    numOfpixel = 0;
-    int step = 9;
-    int spaceClass = 255 / step + 1;
-    int cblue,cgreen,cred;
-    for (int y = 0; y < seg.rows; y++){
-        for (int x = 0; x < seg.cols; x++){
-            if (!isInList(seg.at<int>(y,x) , neighbours)){
-                continue;
-            }
-            intensity = img.at<Vec3b>(y,x);
-            blue = intensity.val[0];
-            green = intensity.val[1];
-            red = intensity.val[2];
-            cblue = ((int)blue) / step;
-            cgreen = ((int)green) / step;
-            cred = ((int)red) / step;
-            //cout << "\n(" << (int)blue << "->" << cblue << ", " << (int)green << "->" << cgreen << ", " << (int)red << "->" << cred << ")\n";
-            // Category assignment
-            features[index+cred] += 1.0 ;
-            features[index+spaceClass+cgreen] += 1.0 ;
-            features[index+2*spaceClass+cblue] += 1.0 ;
-            numOfpixel += 1;
-        }
-    }
-    for (int i = index ; i < index + 3 * spaceClass; i ++){
-        features[i] /= 1.0 * numOfpixel;
-    }
-}*/
-
-/*vector<double> NeighbourScheme2 (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id){
-    list<int> neighbours;
+/*
+vector<double> NeighbourScheme2 (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id)
+{ // attributes
+    set<int> neighbours;
     neighbours = getNeighbours( img, seg, id);
-    features = getNeighboursMarginalDistribution (features,neighbours, index, img, seg);
+    features = getNeighboursLightness (features,neighbours, index, img, seg);
 
     return features;
-}*/
+}
 
-/*void NeighbourScheme3 (vector<double> features, int index,int meanY, int meanX, const cv::Mat& img, const cv::Mat& seg, int id) {
-     // Parameters.
+vector<double> NeighbourScheme3 (vector<double> features, int index,int meanY, int meanX, const cv::Mat& img, const cv::Mat& seg, int id) 
+{
     int sideLength = 70; // unit:pixels
 
     // -----------------------------------
@@ -467,7 +434,6 @@ bool isInList (int id, list<int> L){
 
      for (int y = bottom; y < top; y++){
         for (int x = left; x < right; x++){
-            // Here we ignore the pixel in the same super pixel
             if (seg.at<int>(y,x) == id){
                 continue;
             }
@@ -493,7 +459,6 @@ bool isInList (int id, list<int> L){
      numOfpixel = 0;
      for (int y = bottom; y < top; y++){
         for (int x = left; x < right; x++){
-            // Here we ignore the pixel in the same super pixel
             if (seg.at<int>(y,x) == id){
                 continue;
             }
@@ -510,14 +475,15 @@ bool isInList (int id, list<int> L){
      for (int i = index + 9; i < index + 12; i ++) {
         features[i] /= 1.0 * numOfpixel;
      }
-}*/
+    return features;
+} */
 
 // getSuperpixelFeatures -----------------------------------------------------
 // This function extracts a feature vector for the superpixel with given id.
 vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int id){
 
     // Length of the feature vector and vector initialised to 0.0 for all values
-    const unsigned numFeatures = 63;
+    const unsigned numFeatures = 45;
 	vector<double> features(numFeatures, 0.0);
 	int pixelcount = getPixelCount(seg, id);
 
@@ -529,7 +495,7 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     features = NeighbourScheme1(features, 21, pixelcount, img, seg, id);
     
     return features;
-}
+} 
 
 // -----------------------------------------------------------------------------
 /* getSuperpixelLabel ----------------------------------------------------------
