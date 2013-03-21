@@ -335,17 +335,17 @@ vector<double> checkNeighbours (vector<double> features,int index, const cv::Mat
 vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int id){
 
     // Length of the feature vector and vector initialised to 0.0 for all values
-    const unsigned numFeatures = 21; // using only colour and location data, remove unnecessary length
+    const unsigned numFeatures = 45; // using only colour and location data, remove unnecessary length
 	vector<double> features(numFeatures, 0.0);
 	int pixelcount = getPixelCount(seg, id); // pixelcount of the current superpixel
 
-	/* FULLY FEATURED ALGORITHM
+	// FULLY FEATURED ALGORITHM
     features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
     features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
     features = getLocations(features, 12 , pixelcount, img, seg, id);
     features = getColourDifference(features, 16, pixelcount, img, seg, id);
     features = checkNeighbours(features, 21, img, seg, id);
-    */
+    
     
     /* COLOUR DATA ONLY
     features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
@@ -353,12 +353,12 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     features = getColourDifference(features, 12 , pixelcount, img, seg, id);
     */
     
-    // COLOUR AND LOCATION DATA
+    /* COLOUR AND LOCATION DATA
     features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
     features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
     features = getColourDifference(features, 12, pixelcount, img, seg, id);
     features = getLocations(features, 17 , pixelcount, img, seg, id);
-
+    */
     
     return features;
 } 

@@ -12,7 +12,7 @@
 % - DOCUMENT GEOMETRY SETUP
 \documentclass[11pt,a4paper]{article}
 \usepackage{geometry}
-\geometry{margin=20mm}
+\geometry{top=18mm,bottom=18mm,left=20mm,right=20mm}
 \usepackage{lastpage}
 \makeatletter \renewcommand{\@oddfoot}{\hfil Page \thepage\ of \pageref{LastPage} \hfil} \makeatother
 % -
@@ -53,82 +53,73 @@ urlcolor=black		% - URL colour
 \begin{document}
 % -----
 % - Title
-\begin{center}
-\Hrule\\
+{\center
 \textbf{\Huge COMP2550/COMP3130 ANU\\Warmup Project Report}\\
 \textbf{\\\large Christopher Claou\'e-Long 
 (\href{mailto:u5183532@anu.edu.au}{\textit{\underline{\smash{u5183532@anu.edu.au}}}})\\
 Jimmy Lin 
 (\href{mailto:u5223173@anu.edu.au}{\textit{\underline{\smash{u5223173@anu.edu.au}}}})\\}
-\Hrule
-\end{center}
+}
 % -
 % -
-\begin{multicols}{2}
+\begin{multicols*}{2}
 \section{Introduction and Overview}
-The field of computer vision is often thought of as a diverse topic, however in reality there are three major paths to which each project can be linked.  The first two -- scene categorisation and object detection -- aim to provide a summary of a scene using tags or bounding boxes around discrete objects, however do not deliver an accurate object outline nor consider the image as a whole like what happens in human vision.
+The field of computer vision is often thought of as a diverse topic, with many different projects achieving different goals. In reality, there are three major paths to which each project can be linked.  The first two -- scene categorisation and object detection -- aim to provide a partial summary of a scene using tags or bounding boxes around discrete objects, however do not deliver an accurate object outline nor consider the image as a whole like what happens in real life human vision.
 
-The task for this warmup project was to further the third path of research: annotating an entire image at the pixel level to describe the entire scene.  This would be done by considering a unified cluster of pixels (a superpixel) and extracting a set of useful features to check against using the open source Darwin framework for machine learning and the MSRC dataset.  The desired outcome was a feature vector that allowed machine learning algorithms to classify superpixels in images with at least 50\% accuracy.
+The task for this warmup project was to perform research along the third major path: annotating an entire image at the pixel level to describe the entire scene.  This would be done by considering a unified cluster of pixels (a superpixel) and extracting a set of useful features to allow accurate labelling by a classifier based on the open source Darwin framework for machine learning on the MSRC dataset.  The desired outcome was a feature vector that allowed the machine learning classifier to differentiate superpixels in images with at least 50\% accuracy, and to identify whether a good classifier or good set of features is more important to achieve accurate computer vision.
 
 \section{Method}
+It is hypothesised that a set of good features will be more important to correct image labelling than achieving an efficient and complex classifier, therefore the features must reflect on how humans view images.
 
-The first few features implemented were the average discrete red, green and blue values of the superpixel as well as their standard deviation, since this would begin to differentiate between extremely different superpixels such as those describing sky and grass.  Calculating the difference and absolute difference between the red, green and blue average values across the superpixel to further bring out features dependent on the superpixel composition could also help the classifier decide which label to apply as it brings out major differences in colour composition.  Knowing the centre of the superpixel in order to work out its average position in the image is taken into account to help differentiate between similar superpixels representing different objects in different locations in the image (for example, sky and water or trees and grass), and the average gradient % the "smoothness"
- in the superpixel \HUGEBOLD{CONTINUE HERE.} 
+The human species has developed a striking ability to differentiate objects based on their colour alone.  To this extent, the first features considered were based on this to begin separating between superpixels of obvious colour difference. Calculating the average value of discrete red, green and blue values as well as their standard deviation across the superpixel appears to be a valid, if na\"ive method of approximating this, as does including the average difference and absolute difference between the discrete primary colour values at each pixel and compared to those immediately neighbouring them.
+
+Although colour is one of humans' primary resources when differentiating objects, it alone is insufficient to work out what an object is in an image.  Position is another important feature to include, especially when the need arises to differentiate between sky and water or trees and grass for example.  To approximate this aspect of human vision, the feature vector also contains the average position of the superpixel -- its centre -- and a standard deviation of the x and y coordinates it contains.
  
- Human vision however does not only take into consideration the colour and position of a single object at a time - the surrounding neighbours of an object are also factored in to make an accurate judgement about the object type.  To simulate this, the algorithm should compare the differences between the superpixel's immediate neighbours and itself to intuitively approximate the outlines of objects, and help the classifier decide under what label superpixels are more likely to fall when in close proximity to superpixels of another specific type.
+Real life vision does not only take into consideration the immediate features of a discrete object.  Whenever the eye looks at a point of interest, it also captures data from around it to work out the shape and outline of objects of import.  The average colour of the neighbouring superpixels is therefore also factored in as this is hypothesized to increase the probability of an accurate judgement about the superpixel label based on what it is surrounded by.
 
-\begin{comment}
-the average smoothness counts the mean of RGB lightness difference of all pixels to their neighbour pixels. 
-
-And location of one superpixel, more specifically, evalutates the mean and standard deviation of x,y coordinate of one pixel in its located image. 
-
-To further enhance the accuracy, we may need to, when forming the feature vector of one superpixel, take into consideration the brief information of neighboured superpixel. 
-
-That is an intuitively meaningful approach because even human cannot recognize a small region without perceiving its surroundings. 
-
-Yet, the experiments we have accomplished till now does not indicate the effectiveness of that approach.
-
- One possible reason is that the features we pick out for this approach provide little information regarding the surrounded environment of one superpixel. 
- 
- By the way, we apply some algorithm optimizations to reduce the time cost for training of classifier with neighbour superpixel detection, from about 6 hours to 25 minutes. 
- 
- One way to fulfill this progress is to replace linear list with hash set to minimize the time for membership evaluation. 
-\end{comment}
-
+The classifier relies on a decision tree with a default maximum depth of 8 and a threshold cutoff of 1000.  Increasing these values may lead to an overall improvement in accuracy as well.%  To check this accuracy, Pixelwise labelling will be used to ensure that superpixels do not `leak' across multiple objects.
 \section{Results}
+
 \begin{tabular}{|p{100pt}|p{50pt}|p{50pt}|}\hline
-Description & Testing  & Training\\
-& accuracy & accuracy\\\hline
-Fully featured algorithm: colour features, position and neighbours taken into consideration, & 52.33\% & 57.99\%\\\hline
-As above, with a greater decision tree threshold cutoff of 2000 & 52.24\% & 57.93\%\\\hline
+Description & Accuracy on test data  & Accuracy on training data\\\hline
 Only colour features taken into consideration & 50.42\% & 53.77\%\\\hline
-Only colour features and position taken into consideration & 54.13\% & 54.81\%\\\hline
-As above, with a greater decision tree threshold cutoff of 2000 & 54.74\% & 54.74\%\\\hline
+Only colour features and position taken into consideration & 51.24\% & 57.59\%\\\hline
+Fully featured algorithm& 52.33\% & 57.99\%\\\hline
+As above (threshold cutoff of 2000) & 52.24\% & 57.93\%\\\hline
+As above (threshold cutoff of 2000 and maximum depth of 16) & 53.14\% & 70.46\% \\\hline
 \end{tabular}
-Pictures inserted here from threshold cutoff of 2000, good and bad classification examples.
+\end{multicols*}\newpage
+\begin{multicols*}{2}
+
+\noindent\includegraphics[scale=0.0045]{images/act1_3_s.jpg}\ \ \ \ \ \ \ \ \ \ \ \ \ 
+\includegraphics[scale=0.33]{images/perc1_3_s.png}\\
+
+\noindent\includegraphics[scale=0.005]{images/act2_18_s.jpg}\ \ \ \ \ \ \ \ \ \ \ 
+\includegraphics[scale=0.35]{images/perc2_18_s}\\
+
+\noindent\includegraphics[scale=0.0048]{images/act13_7_s.jpg}\ \ \ \ \ \ \ \ \ \ \ \ \  
+\includegraphics[scale=0.34]{images/perc13_7_s}\\
+
+\noindent\includegraphics[scale=0.0048]{images/act3_12_s.jpg}\ \ \ \ \ \ \ \ \ \ \ \ \ 
+\includegraphics[scale=0.34]{images/perc3_12_s}\\
+\textit{The classifier can differentiate accurately between values of similar colour and different contrast, but labels a cloudy sky mostly grey because to it, the features of the sky look like those of a building (right colour, right position, neighbours of similar colour).}\\
+\textit{When given a complex scene with many objects, the classifier fails to achieve high accuracy.  It manages to differentiate obvious outlines, but incorrectly labels superpixels that are not immediately obvious from their colour and position features.}
 
 \section{Discussion}
-Accuracy discussion - what it's good at and fails at
+Pixelwise label checking was required to ensure the accuracy of the features and classifier, since as seen a superpixel may overlap onto multiple different objects -- making it impossible to check whether the superpixel was labelled correctly.  Pixelwise checking avoids this problem since it has no possible overlap, there is no smaller unit.  This ensures that the overall accuracy of the machine learning algorithm is measured correctly.
 
-Where the algorithm fails - animals and objects with outlines of similar appearance especially!
+The resulting images and average accuracy results of the algorithm show that when faced with a simple picture with objects of vastly different colour and contrast, the classifier has enough knowledge from the features to differentiate between them.  However, as soon as it is given a picture with ambiguous colour and contrast or a complex set of multicoloured objects, accuracy reduces dramatically.  The problem therefore resides in the feature set's inability to differentiate the various peak colours in the superpixels; this is most notable in images where objects are similar in colour or where there is a large amount of different objects since the object labels `leak' into the background considerably.
 
-Performance on training set compared to test set, is this difference expected?
+Increasing the cutoff threshold of the decision tree had a slight negative effect on the accuracy of the classifier without the addition of a deeper tree cutoff.  However, the accuracy gained on the test set was very small in comparison to the accuracy on the training data, which improved considerably -- this suggests that while it is normal to achieve higher accuracy on the data the algorithm trained on, the implemented features are overfitting to the training dataset.
 
-Changes when modifying depth of decision tree
+The accuracy also confirmed the hypothesis that achieving a good set of features is more important than devising a clever and more complex classifier -- even with a simple decision tree classifier, the results were only as accurate as the features it was given allowed; incrasing the decision complexity had very little effect. The implementation of a set of good, well thought out features that allow the classifier to accurately differentiate data is therefore essential to a computer's whole-image understanding .
 
-Why is it important to evaluate pixelwise accuracy instead of accuracy on the superpixels?  Checking accuracy of a superpixel  is difficult, since it may overlap multiple different may overlap onto different label areas, making it impossible to check consistently whether the superpixel was labelled correctly.  Pixelwise accuracy has no possible overlap, ensuring that the overall accuracy of the machine learning algorithm is measured correctly.
+Possible improvements to the feature set in order to achieve a better labelling of superpixels need to discriminate especially between texture and peak colour content of superpixels -- to this end taking into account the hue, top colour histogram values, improved neighbour algorithms, and applying applying a gaussian/laplacian filter to statistically analyse the texture of the superpixel would be a good avenue for further research in the future. 
+\section{Documentation / Project Reference}
+K. Park and S. Gould. On Learning Higher-Order Consistency Potentials for Multi-class Pixel Labeling, \textit{Proceedings of the European Conference on Computer Vision (ECCV)}, 2012.\\
+S. Gould. DARWIN: A Framework for Machine Learning and Computer Vision Research and Development, \textit{JMLR}, 2012.
+\end{multicols*}
 
-What do you think is more important, the features or the machine learning classifier? Machine learning classifiers can be built in multiple ways - vector distance tests, binary search trees, hash sets, cosine similarity, comparing individual features, considering features as a whole, and so on.  However, these classifers are only as good as the features they are given -- it is therefore crucial to discover a set of features that allows the classifier to differentiate superpixels accurately.
-
-
-Possible improvements: Improving neighbour algorithms, considering a neighbourhood wider than a superpixel's immediate neighbours (to help differentiate buildings and sky, faces/flowers and surrounds etc), taking into account a more accurate representation of texture (for example applying applying a gaussian filter to statistically analyse the texture of the superpixel) and features allowing to differentiate between objects of similar colour and contrast.
-
-\section{References}
-K. Park and S. Gould. On Learning Higher-Order Consistency Potentials for Multi-class Pixel Labeling. In \textit{Proceedings of the European Conference on Computer Vision (ECCV)}, 2012.\\
-S. Gould. DARWIN: A Framework for Machine Learning and Computer Vision Research and Development. In \textit{Journal of Machine Learning Research (JMLR)}, 2012.\\
-
-\end{multicols}
-\vfill\Hrule
 \end{document}
 % -----
 % END OF LINE
