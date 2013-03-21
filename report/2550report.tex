@@ -99,12 +99,13 @@ Yet, the experiments we have accomplished till now does not indicate the effecti
 \begin{tabular}{|p{100pt}|p{50pt}|p{50pt}|}\hline
 Description & Testing  & Training\\
 & accuracy & accuracy\\\hline
-Standard algorithm: colour features, position and neighbours taken into consideration, 1000 threshold cutoff for decision tree & 50\% & 50\%\\\hline
-Only colour features taken into consideration & 50\% & 50\%\\\hline
-Only colour features and position taken into consideration & 50\% & 50\%\\\hline
-Standard algorithm with a greater decision tree cutoff of 2000 & 50\% & 50\%\\\hline
+Fully featured algorithm: colour features, position and neighbours taken into consideration, & 52.33\% & 57.99\%\\\hline
+As above, with a greater decision tree threshold cutoff of 2000 & 52.24\% & 57.93\%\\\hline
+Only colour features taken into consideration & 50.42\% & 53.77\%\\\hline
+Only colour features and position taken into consideration & 54.13\% & 54.81\%\\\hline
+As above, with a greater decision tree threshold cutoff of 2000 & 54.74\% & 54.74\%\\\hline
 \end{tabular}
-Pictures inserted here
+Pictures inserted here from threshold cutoff of 2000, good and bad classification examples.
 
 \section{Discussion}
 Accuracy discussion - what it's good at and fails at
@@ -120,7 +121,7 @@ Why is it important to evaluate pixelwise accuracy instead of accuracy on the su
 What do you think is more important, the features or the machine learning classifier? Machine learning classifiers can be built in multiple ways - vector distance tests, binary search trees, hash sets, cosine similarity, comparing individual features, considering features as a whole, and so on.  However, these classifers are only as good as the features they are given -- it is therefore crucial to discover a set of features that allows the classifier to differentiate superpixels accurately.
 
 
-Possible improvements include considering a neighbourhood wider than a superpixel's immediate neighbours (to help differentiate buildings and sky, faces/flowers and surrounds etc), taking into account a more accurate representation of texture (for example applying applying a gaussian filter to statistically analyse the texture of the superpixel) and inserting more features to differentiate between objects (including their background) of similar colour and contrast.
+Possible improvements: Improving neighbour algorithms, considering a neighbourhood wider than a superpixel's immediate neighbours (to help differentiate buildings and sky, faces/flowers and surrounds etc), taking into account a more accurate representation of texture (for example applying applying a gaussian filter to statistically analyse the texture of the superpixel) and features allowing to differentiate between objects of similar colour and contrast.
 
 \section{References}
 K. Park and S. Gould. On Learning Higher-Order Consistency Potentials for Multi-class Pixel Labeling. In \textit{Proceedings of the European Conference on Computer Vision (ECCV)}, 2012.\\

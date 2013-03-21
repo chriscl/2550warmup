@@ -20,7 +20,7 @@ using namespace Eigen;
 /* Calculate the Red/Green/Blue average luminance values in the superpixel as 
  * well as their standard deviation, adding them to the features vector starting
  * at the index value. 
- * REQUIRES 6 VECTOR VALUES */
+ * REQUIRES 6 VECTOR INDEX POSITIONS */
 vector<double> getRGBLuminance(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
      double blue, green, red;
      Vec3b intensity;
@@ -67,7 +67,7 @@ vector<double> getRGBLuminance(vector<double> features, int index, int pixels, c
 /* Calculate the average difference and average absolute difference between the
  * red, green and blue values in the superpixel, adding them to the features
  * vector starting at the index value.
- * REQUIRES 6 VECTOR VALUES */
+ * REQUIRES 6 VECTOR INDEX POSITIONS */
 vector<double> getRGBDiff(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
      double blue, green, red;
      Vec3b intensity;
@@ -114,7 +114,7 @@ int getPixelCount(const cv::Mat& seg, int id){
 /* Calculate the average xy location (the centre) of the superpixel, adding it 
  * to the features vector at the index value as well as the standard deviation
  * within the superpixel
- * REQUIRES 4 VECTOR VALUES */
+ * REQUIRES 4 VECTOR INDEX POSITIONS */
 vector<double> getLocations (vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
     for (int y = 0; y < seg.rows; y++){
         for (int x = 0; x < seg.cols; x++){
@@ -146,40 +146,9 @@ vector<double> getLocations (vector<double> features, int index, int pixels, con
 	return features;
 }
 
-// TODO delete? FLAWED APPROACH.
-vector<double> getMarginalDistribution(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
-    double blue, green, red;
-    Vec3b intensity;
-    int step = 9;
-    int spaceClass = 255 / (step + 1);
-    int cblue,cgreen,cred;
-    for (int y = 0; y < seg.rows; y++){
-        for (int x = 0; x < seg.cols; x++){
-            if (seg.at<int>(y,x) != id){
-                continue;
-            }
-            intensity = img.at<Vec3b>(y,x);
-            blue = intensity.val[0];
-            green = intensity.val[1];
-            red = intensity.val[2];
-            cred = ((int)red) / step;
-            cgreen = ((int)green) / step;
-            cblue = ((int)blue) / step;
-            // Category assignment
-            features[index+cred] += 1.0 ;
-            features[index+spaceClass+cgreen] += 1.0 ;
-            features[index+2*spaceClass+cblue] += 1.0 ;
-        }
-    }
-    for (int i = index ; i < index + 3 * spaceClass; i ++){
-        features[i] /= 1.0 * pixels;
-    }
-    return features;
-}
-
 /* Calculate the average colour difference across the superpixel, somewhat
  * approximating the average gradient of the superpixel
- * REQUIRES 5 VECTOR VALUES */
+ * REQUIRES 5 VECTOR INDEX POSITIONS */
 vector<double> getColourDifference(vector<double> features, int index, int pixels, const cv::Mat& img, const cv::Mat& seg, int id){
     Vec3b intensity;
     double blue, green, red, bluetemp=0.0, greentemp=0.0, redtemp=0.0;
@@ -329,7 +298,8 @@ int findNotableNeighbour(set<int> neighbours, list<double> simList, bool findMax
 // feature selection based on neighbours --------------------------------
 /* Defines a hashset with all neighbouring superpixels, finds the most and least
  * similar and adds their luminance and RGB difference values to the feature
- * vector */
+ * vector 
+ * REQUIRES 24 VECTOR INDEX VALUES*/
 vector<double> checkNeighbours (vector<double> features,int index, const cv::Mat& img, const cv::Mat& seg, int id){ // 24 attributes
     set<int> neighbours;
     list<double> similarity;
@@ -365,7 +335,7 @@ vector<double> checkNeighbours (vector<double> features,int index, const cv::Mat
 vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int id){
 
     // Length of the feature vector and vector initialised to 0.0 for all values
-    const unsigned numFeatures = 45;
+    const unsigned numFeatures = 21; // using only colour and location data, remove unnecessary length
 	vector<double> features(numFeatures, 0.0);
 	int pixelcount = getPixelCount(seg, id); // pixelcount of the current superpixel
 
@@ -386,8 +356,8 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
     // COLOUR AND LOCATION DATA
     features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
     features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
-    features = getLocations(features, 12 , pixelcount, img, seg, id);
-    features = getColourDifference(features, 16, pixelcount, img, seg, id);
+    features = getColourDifference(features, 12, pixelcount, img, seg, id);
+    features = getLocations(features, 17 , pixelcount, img, seg, id);
 
     
     return features;
