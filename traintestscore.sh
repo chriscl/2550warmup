@@ -8,8 +8,11 @@ make clean
 make all
 
 # Train the program
-echo -e "\n \n Training... \n \n"
-../../bin/trainCOMP3130Model -verbose -o model.xml data/images/train/ data/labels/
+#echo -e "\n \n Training... \n \n"
+#../../bin/trainCOMP3130Model -verbose -o model.xml data/images/train/ data/labels/
+# Uncomment the following lines to train with a threshold of 2000 instead of 1000
+ echo -e "\n \n Training with a decision tree threshold of 2000... \n \n"
+../../bin/trainCOMP3130Model -set drwnDecisionTree maxThresholds 2000 -verbose -o model.xml data/images/train/ data/labels/
 
 # Test the program
 echo -e "\n \n Testing on test set... \n \n"

@@ -369,11 +369,26 @@ vector<double> getSuperpixelFeatures(const cv::Mat& img, const cv::Mat& seg, int
 	vector<double> features(numFeatures, 0.0);
 	int pixelcount = getPixelCount(seg, id); // pixelcount of the current superpixel
 
+	/* FULLY FEATURED ALGORITHM
     features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
     features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
     features = getLocations(features, 12 , pixelcount, img, seg, id);
     features = getColourDifference(features, 16, pixelcount, img, seg, id);
     features = checkNeighbours(features, 21, img, seg, id);
+    */
+    
+    /* COLOUR DATA ONLY
+    features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
+    features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
+    features = getColourDifference(features, 12 , pixelcount, img, seg, id);
+    */
+    
+    // COLOUR AND LOCATION DATA
+    features = getRGBLuminance(features, 0, pixelcount, img, seg, id);
+    features = getRGBDiff(features, 6, pixelcount, img, seg, id); 
+    features = getLocations(features, 12 , pixelcount, img, seg, id);
+    features = getColourDifference(features, 16, pixelcount, img, seg, id);
+
     
     return features;
 } 
