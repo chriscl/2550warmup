@@ -66,7 +66,7 @@ Jimmy Lin
 \section{Introduction and Overview}
 The field of computer vision is often thought of as a diverse topic, with many different projects achieving different goals. In reality, there are three major paths to which each project can be linked.  The first two -- scene categorisation and object detection -- aim to provide a partial summary of a scene using tags or bounding boxes around discrete objects, however do not deliver an accurate object outline nor consider the image as a whole like what happens in real life human vision.
 
-The task for this warmup project was to perform research along the third major path: annotating an entire image at the pixel level to describe the entire scene.  This would be done by considering a unified cluster of pixels (a superpixel) and extracting a set of useful features to allow accurate labelling by a classifier based on the open source Darwin framework for machine learning on the MSRC dataset.  The desired outcome was a feature vector that allowed the machine learning classifier to differentiate superpixels in images with at least 50\% accuracy, and to identify whether a good classifier or good set of features is more important to achieve accurate computer vision.
+The task for this warmup project was to perform research along the third major path: annotating an entire image at the pixel level to describe the entire scene.  This would be done by considering a unified cluster of pixels (a superpixel) and extracting a set of useful 's open source Darwin framework for machine learning on the MSRC dataset.  The desired outcome was a feature vector that allowed the machine learning classifier to differentiate superpixels in images with at least 50\% accuracy, and to identify whether a good classifier or good set of features is more important to achieve accurate computer vision.
 
 \section{Method}
 It is hypothesised that a set of good features will be more important to correct image labelling than achieving an efficient and complex classifier, therefore the features must reflect on how humans view images.
@@ -91,31 +91,35 @@ As above (threshold cutoff of 2000 and maximum depth of 16) & 53.14\% & 70.46\% 
 \end{multicols*}\newpage
 \begin{multicols*}{2}
 
+% Grass
 \noindent\includegraphics[scale=0.0045]{images/act1_3_s.jpg}\ \ \ \ \ \ \ \ \ \ \ \ \ 
 \includegraphics[scale=0.33]{images/perc1_3_s.png}\\
 
-\noindent\includegraphics[scale=0.005]{images/act2_18_s.jpg}\ \ \ \ \ \ \ \ \ \ \ 
+% Trees
+\ \ \ \noindent\includegraphics[scale=0.005]{images/act2_18_s.jpg}\ \ \ 
 \includegraphics[scale=0.35]{images/perc2_18_s}\\
 
+% Books
 \noindent\includegraphics[scale=0.0048]{images/act13_7_s.jpg}\ \ \ \ \ \ \ \ \ \ \ \ \  
 \includegraphics[scale=0.34]{images/perc13_7_s}\\
 
+% House on grass
 \noindent\includegraphics[scale=0.0048]{images/act3_12_s.jpg}\ \ \ \ \ \ \ \ \ \ \ \ \ 
 \includegraphics[scale=0.34]{images/perc3_12_s}\\
 \textit{The classifier can differentiate accurately between values of similar colour and different contrast, but labels a cloudy sky mostly grey because to it, the features of the sky look like those of a building (right colour, right position, neighbours of similar colour).}\\
 \textit{When given a complex scene with many objects, the classifier fails to achieve high accuracy.  It manages to differentiate obvious outlines, but incorrectly labels superpixels that are not immediately obvious from their colour and position features.}
 
 \section{Discussion}
-Pixelwise label checking was required to ensure the accuracy of the features and classifier, since as seen a superpixel may overlap onto multiple different objects -- making it impossible to check whether the superpixel was labelled correctly.  Pixelwise checking avoids this problem since it has no possible overlap, there is no smaller unit.  This ensures that the overall accuracy of the machine learning algorithm is measured correctly.
+Pixelwise label checking was required to ensure the accuracy of the features and classifier, since as shown on the images above a superpixel may overlap onto multiple different objects -- making it impossible to check whether the superpixel was labelled correctly.  Pixelwise checking avoids this problem since it has no possible overlap, there is no smaller unit.  This ensures that the overall accuracy of the machine learning algorithm is measured correctly.
 
 The resulting images and average accuracy results of the algorithm show that when faced with a simple picture with objects of vastly different colour and contrast, the classifier has enough knowledge from the features to differentiate between them.  However, as soon as it is given a picture with ambiguous colour and contrast or a complex set of multicoloured objects, accuracy reduces dramatically.  The problem therefore resides in the feature set's inability to differentiate the various peak colours in the superpixels; this is most notable in images where objects are similar in colour or where there is a large amount of different objects since the object labels `leak' into the background considerably.
 
 Increasing the cutoff threshold of the decision tree had a slight negative effect on the accuracy of the classifier without the addition of a deeper tree cutoff.  However, the accuracy gained on the test set was very small in comparison to the accuracy on the training data, which improved considerably -- this suggests that while it is normal to achieve higher accuracy on the data the algorithm trained on, the implemented features are overfitting to the training dataset.
 
-The accuracy also confirmed the hypothesis that achieving a good set of features is more important than devising a clever and more complex classifier -- even with a simple decision tree classifier, the results were only as accurate as the features it was given allowed; incrasing the decision complexity had very little effect. The implementation of a set of good, well thought out features that allow the classifier to accurately differentiate data is therefore essential to a computer's whole-image understanding .
+The accuracy also confirmed the hypothesis that achieving a good set of features is more important than devising a clever and more complex classifier -- even with a simple decision tree classifier, the results were only as accurate as the features it was given allowed; increasing the decision complexity had very little effect. The implementation of a set of good, well thought out features that allow the classifier to accurately differentiate data is therefore essential to a computer's whole-image understanding.
 
-Possible improvements to the feature set in order to achieve a better labelling of superpixels need to discriminate especially between texture and peak colour content of superpixels -- to this end taking into account the hue, top colour histogram values, improved neighbour algorithms, and applying applying a gaussian/laplacian filter to statistically analyse the texture of the superpixel would be a good avenue for further research in the future. 
-\section{Documentation / Project Reference}
+Possible improvements to the feature set in order to achieve a better labelling of superpixels therefore need to discriminate especially between texture and peak colour content of superpixels -- to this end taking into account the hue, peak colour histogram values, improved neighbour algorithms, and applying a gaussian/laplacian filter to statistically analyse the texture of the superpixel would be a good avenue for further research. 
+\section{Project Reference}
 K. Park and S. Gould. On Learning Higher-Order Consistency Potentials for Multi-class Pixel Labeling, \textit{Proceedings of the European Conference on Computer Vision (ECCV)}, 2012.\\
 S. Gould. DARWIN: A Framework for Machine Learning and Computer Vision Research and Development, \textit{JMLR}, 2012.
 \end{multicols*}
